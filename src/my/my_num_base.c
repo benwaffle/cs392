@@ -11,6 +11,12 @@ void my_num_base(int num_int, char *chars)
 
     int base = my_strlen(chars);
 
+    // negative
+    if (num < 0) {
+        my_char('-');
+        num = -num;
+    }
+
     // unary
     if (base == 1) {
         for (int i=0; i<num; ++i)
@@ -22,12 +28,6 @@ void my_num_base(int num_int, char *chars)
     if (num == 0) {
         my_char(chars[0]);
         return;
-    }
-
-    // negative
-    if (num < 0) {
-        my_char('-');
-        num = -num;
     }
 
     char str[32]; // unary is handled above, so MAX_INT in base 2 is 31 bits wide
