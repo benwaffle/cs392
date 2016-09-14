@@ -2,7 +2,7 @@
 
 void my_int(int i)
 {
-    // because i = -i doesn't change it here
+    // because i = -i doesn't change it
     if (i == -2147483648) {
         my_str("-2147483648");
         return;

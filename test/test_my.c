@@ -27,6 +27,7 @@ int main()
     my_char('\n');
     TEST(my_int(0));
     TEST(my_int(-1));
+    TEST(my_int(1));
     TEST(my_int(-42));
     TEST(my_int(10));
     TEST(my_int(53));
@@ -47,6 +48,7 @@ int main()
     TEST(my_num_base(0, "a"));
     TEST(my_num_base(1, "a"));
     TEST(my_num_base(7, "z"));
+    TEST(my_num_base(7, "0123456789"));
     TEST(my_num_base(2147483647, "012"));
     TEST(my_num_base(-2147483647, "012"));
     TEST(my_num_base(-2147483648, "012"));
