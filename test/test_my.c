@@ -50,6 +50,7 @@ int main()
     TEST(my_num_base(-3, "a"));
     TEST(my_num_base(7, "z"));
     TEST(my_num_base(7, "0123456789"));
+    TEST(my_num_base(2147483647, "01"));
     TEST(my_num_base(2147483647, "012"));
     TEST(my_num_base(-2147483647, "012"));
     TEST(my_num_base(-2147483648, "012"));
