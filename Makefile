@@ -1,3 +1,3 @@
 run:
-	make -sC src/my/
-	make -sC test/ clean check
+	make -C src/my/
+	make -C test/ clean check
