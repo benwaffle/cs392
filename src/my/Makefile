@@ -6,8 +6,7 @@ OBJ = $(SRC:.c=.o)
 CFLAGS += -I../../include -g -std=c99 -Wall -Werror -pedantic
 
 all: $(OBJ)
-	ar -rc ../../lib/libmy.a $^
-	ranlib ../../lib/libmy.a
+	ar rcs ../../lib/libmy.a $^
 
 clean:
 	rm -f $(OBJ)
