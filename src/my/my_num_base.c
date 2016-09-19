@@ -12,7 +12,7 @@
  */
 void my_num_base(int num_int, char *chars)
 {
-    if (!chars || !*chars) {
+    if (chars == NULL || *chars == '\0') {
         my_str("Error: invalid alphabet");
         return;
     }

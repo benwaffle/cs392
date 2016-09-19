@@ -6,7 +6,7 @@
  */
 int my_strrindex(char *str, char c)
 {
-    if (!str)
+    if (str == NULL)
         return -1;
 
     int len = my_strlen(str);

@@ -6,7 +6,7 @@
  */
 int my_strindex(char *str, char c)
 {
-    if (!str)
+    if (str == NULL)
         return -1;
 
     for (int i = 0; str[i] != '\0'; ++i)

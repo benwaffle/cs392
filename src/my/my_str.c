@@ -5,7 +5,7 @@
  */
 void my_str(char *str)
 {
-    if (!str)
+    if (str == NULL)
         return;
 
     for (; *str; ++str)
