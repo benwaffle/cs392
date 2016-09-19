@@ -1,5 +1,9 @@
 #include "my.h"
 
+/**
+ * Reverse the string, directly in the actual string, without creating a new
+ * string. Return the length of the string.
+ */
 int my_revstr(char *str)
 {
     if (!str)

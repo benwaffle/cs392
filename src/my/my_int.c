@@ -1,5 +1,8 @@
 #include "my.h"
 
+/**
+ * Prints an integer to the console
+ */
 void my_int(int i)
 {
     // because i = -i doesn't change it

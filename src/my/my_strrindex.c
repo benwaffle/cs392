@@ -1,5 +1,9 @@
 #include "my.h"
 
+/**
+ * Returns the last index at which the character is found in the string or -1
+ * if there is none.
+ */
 int my_strrindex(char *str, char c)
 {
     if (!str)
