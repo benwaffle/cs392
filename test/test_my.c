@@ -1,59 +1,82 @@
+#define _GNU_SOURCE
 #include <stdio.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
 #include "my.h"
 
-#define TEST(code) { \
+// test code that prints to stdout
+#define PRTEST(code) { \
     my_str(#code); \
     my_str(": "); \
     code; \
-    my_str("\n"); \
+    my_char('\n'); \
+}
+
+// just print the code
+#define PRINT(code) { \
+    my_str(#code); \
+    my_str(";\n"); \
+}
+
+#define assert(p) ((p) ? (void)0 : assert_failed(#p, __FILE__, __LINE__))
+void assert_failed(char *p, char *file, int line) {
+    my_str(file);
+    my_char(':');
+    my_int(line);
+    my_str(": Assertion `");
+    my_str(p);
+    my_str("' failed\n");
+    kill(getpid(), SIGABRT); // suicide
 }
 
 int main()
 {
     my_str("------- test_my --------\n\n");
 
-    TEST(my_char('A'));
-    TEST(my_char('Z'));
-    TEST(my_char('a'));
-    TEST(my_char('z'));
-    TEST(my_char(0));
+    PRTEST(my_char('A'));
+    PRTEST(my_char('Z'));
+    PRTEST(my_char('a'));
+    PRTEST(my_char('z'));
+    PRTEST(my_char(0));
 
     my_char('\n');
-    TEST(my_str(NULL));
-    TEST(my_str("h"));
-    TEST(my_str("Hello world"));
-    TEST(my_str("just a\0test"));
+    PRTEST(my_str(NULL));
+    PRTEST(my_str("h"));
+    PRTEST(my_str("Hello world"));
+    PRTEST(my_str("just a\0test"));
 
     my_char('\n');
-    TEST(my_int(0));
-    TEST(my_int(-1));
-    TEST(my_int(1));
-    TEST(my_int(-42));
-    TEST(my_int(10));
-    TEST(my_int(53));
-    TEST(my_int(100));
-    TEST(my_int(120304));
-    TEST(my_int(1234567890));
-    TEST(my_int(2147483647)); // max int
-    TEST(my_int(-2147483647));
-    TEST(my_int(-2147483648)); // min int
+    PRTEST(my_int(0));
+    PRTEST(my_int(-1));
+    PRTEST(my_int(1));
+    PRTEST(my_int(-42));
+    PRTEST(my_int(10));
+    PRTEST(my_int(53));
+    PRTEST(my_int(100));
+    PRTEST(my_int(120304));
+    PRTEST(my_int(1234567890));
+    PRTEST(my_int(2147483647)); // max int
+    PRTEST(my_int(-2147483647));
+    PRTEST(my_int(-2147483648)); // min int
 
     my_char('\n');
-    TEST(my_num_base(42, ""));
-    TEST(my_num_base(42, NULL));
-    TEST(my_num_base(9, "RTFM"));
-    TEST(my_num_base(264837422, "abcdefghijklmnopqrstuvwxyz"));
-    TEST(my_num_base(-264837422, "abcdefghijklmnopqrstuvwxyz"));
-    TEST(my_num_base(256, "01"));
-    TEST(my_num_base(0, "a"));
-    TEST(my_num_base(1, "a"));
-    TEST(my_num_base(-3, "a"));
-    TEST(my_num_base(7, "z"));
-    TEST(my_num_base(7, "0123456789"));
-    TEST(my_num_base(2147483647, "01"));
-    TEST(my_num_base(2147483647, "012"));
-    TEST(my_num_base(-2147483647, "012"));
-    TEST(my_num_base(-2147483648, "012"));
+    PRTEST(my_num_base(42, ""));
+    PRTEST(my_num_base(42, NULL));
+    PRTEST(my_num_base(9, "RTFM"));
+    PRTEST(my_num_base(264837422, "abcdefghijklmnopqrstuvwxyz"));
+    PRTEST(my_num_base(-264837422, "abcdefghijklmnopqrstuvwxyz"));
+    PRTEST(my_num_base(256, "01"));
+    PRTEST(my_num_base(0, "a"));
+    PRTEST(my_num_base(1, "a"));
+    PRTEST(my_num_base(-3, "a"));
+    PRTEST(my_num_base(7, "z"));
+    PRTEST(my_num_base(7, "0123456789"));
+    PRTEST(my_num_base(2147483647, "01"));
+    PRTEST(my_num_base(2147483647, "012"));
+    PRTEST(my_num_base(-2147483647, "012"));
+    PRTEST(my_num_base(-2147483648, "012"));
+
     for (int i = -8; i <= 8; ++i) {
         my_int(i);
         my_str(": ");
@@ -62,66 +85,65 @@ int main()
     }
 
     my_char('\n');
-    TEST(my_alpha());
+    PRTEST(my_alpha());
 
     my_char('\n');
-    TEST(my_digits());
+    PRTEST(my_digits());
 
     my_char('\n');
-    TEST(my_int(my_strindex("hello", 'h')));
-    TEST(my_int(my_strindex("hello", 'o')));
-    TEST(my_int(my_strindex("hello", 'l')));
-    TEST(my_int(my_strindex("hello", 'z')));
-    TEST(my_int(my_strindex(NULL, 'a')));
-    TEST(my_int(my_strindex("", 'a')));
+    PRINT(assert(my_strindex("hello", 'h') == 0));
+    PRINT(assert(my_strindex("hello", 'o') == 4));
+    PRINT(assert(my_strindex("hello", 'l') == 2));
+    PRINT(assert(my_strindex("hello", 'z') == -1));
+    PRINT(assert(my_strindex(NULL, 'a') == -1));
+    PRINT(assert(my_strindex("", 'a') == -1));
 
     my_char('\n');
-    TEST(my_int(my_strrindex("hello", 'h')));
-    TEST(my_int(my_strrindex("hello", 'o')));
-    TEST(my_int(my_strrindex("hello", 'l')));
-    TEST(my_int(my_strrindex("hello", 'z')));
-    TEST(my_int(my_strrindex(NULL, 'a')));
-    TEST(my_int(my_strrindex("", 'a')));
+    PRINT(assert(my_strrindex("hello", 'h') == 0));
+    PRINT(assert(my_strrindex("hello", 'o') == 4));
+    PRINT(assert(my_strrindex("hello", 'l') == 3));
+    PRINT(assert(my_strrindex("hello", 'z') == -1));
+    PRINT(assert(my_strrindex(NULL, 'a') == -1));
+    PRINT(assert(my_strrindex("", 'a') == -1));
 
     my_char('\n');
-    TEST(my_int(my_strlen(NULL)));
-    TEST(my_int(my_strlen("")));
-    TEST(my_int(my_strlen("a")));
-    TEST(my_int(my_strlen("ab")));
-    TEST(my_int(my_strlen("nicki minaj")));
+    PRINT(assert(my_strlen(NULL) == -1));
+    PRINT(assert(my_strlen("") == 0));
+    PRINT(assert(my_strlen("a") == 1));
+    PRINT(assert(my_strlen("ab") == 2));
+    PRINT(assert(my_strlen("nicki minaj") == 11));
 
     my_char('\n');
-    TEST(
+
+    PRTEST(
         char x[] = "stevens";
-        my_int(my_revstr(x));
+        assert(my_revstr(x) == 7);
         my_str(x)
     );
 
-    TEST(
+    PRTEST(
         char x[] = "a";
-        my_int(my_revstr(x));
+        assert(my_revstr(x) == 1);
         my_str(x)
     );
 
-    TEST(
+    PRTEST(
         char x[] = "ab";
-        my_int(my_revstr(x));
+        assert(my_revstr(x) == 2);
         my_str(x)
     );
 
-    TEST(
-        my_int(my_revstr(NULL))
-    );
+    PRINT(assert(my_revstr(NULL) == -1));
 
-    TEST(
+    PRTEST(
         char y[] = "";
-        my_int(my_revstr(y));
+        assert(my_revstr(y) == 0);
         my_str(y)
     );
 
-    TEST(
+    PRTEST(
         char y[] = "abcdefghijklmnopqrstuvwxyz";
-        my_int(my_revstr(y));
+        assert(my_revstr(y) == 26);
         my_str(y)
     );
 
