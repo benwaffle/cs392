@@ -15,6 +15,7 @@
 
 // just print the code
 #define PRINT(code) { \
+    code; \
     my_str(#code); \
     my_str(";\n"); \
 }
