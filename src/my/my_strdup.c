@@ -7,6 +7,9 @@
  */
 char *my_strdup(char *str)
 {
+    if (str == NULL)
+        return NULL;
+
     int len = my_strlen(str);
     char *new = malloc(len + 1);
     my_strcpy(new, str);

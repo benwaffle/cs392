@@ -262,6 +262,8 @@ int main()
         free(copy);
     });
 
+    PRINT(assert(my_strdup(NULL) == NULL));
+
     my_char('\n');
 
     PRINT({
