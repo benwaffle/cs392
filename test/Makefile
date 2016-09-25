@@ -1,8 +1,13 @@
-CFLAGS = -g -Wall -Werror -pedantic -std=c99 -I ../include
-LDLIBS = -L../lib -lmy
+BIN = test_my lab_one lab_two
+CFLAGS += -g -Wall -Werror -pedantic -std=c99 -I ../include
+LDLIBS += -L../lib -lmy
 
-check: lab_one lab_two test_my
-	./lab_two
+.PHONY: all check fclean
 
-clean:
-	rm -f ./lab_one ./test_my
+all: $(BIN)
+
+check: test_my
+	./test_my
+
+fclean:
+	rm -f $(BIN)

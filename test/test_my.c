@@ -20,7 +20,7 @@
     my_str(";\n"); \
 }
 
-#define assert(p) ((p) ? (void)0 : assert_failed(#p, __FILE__, __LINE__))
+#define assert(p) ((p) ? my_str("\x1B[32m▸\x1B[0m ") : assert_failed(#p, __FILE__, __LINE__))
 void assert_failed(char *p, char *file, int line) {
     my_str(file);
     my_char(':');
@@ -147,6 +147,183 @@ int main()
         assert(my_revstr(y) == 26);
         my_str(y)
     );
+
+    my_char('\n');
+
+    char *x = "hello";
+    PRINT(assert(my_strfind(NULL, 'a') == NULL));
+    PRINT(assert(my_strfind(x, '\0') == NULL));
+    PRINT(assert(my_strfind("", '\0') == NULL));
+    PRINT(assert(my_strfind(x, 'h') == x));
+    PRINT(assert(my_strfind(x, 'e') == x + 1));
+    PRINT(assert(my_strfind(x, 'l') == x + 2));
+
+    my_char('\n');
+
+    PRINT(assert(my_strrfind(NULL, 'a') == NULL));
+    PRINT(assert(my_strrfind(x, '\0') == NULL));
+    PRINT(assert(my_strrfind("", '\0') == NULL));
+    PRINT(assert(my_strrfind(x, 'h') == x));
+    PRINT(assert(my_strrfind(x, 'e') == x + 1));
+    PRINT(assert(my_strrfind(x, 'l') == x + 3));
+
+    my_char('\n');
+
+    PRINT(assert(my_strcmp("sup", "sup") == 0));
+    PRINT(assert(my_strcmp("su", "sup") < 0));
+    PRINT(assert(my_strcmp("sup", "su") > 0));
+    PRINT(assert(my_strcmp("abc", "abd") < 0));
+    PRINT(assert(my_strcmp("abd", "abc") > 0));
+    PRINT(assert(my_strcmp(NULL, NULL) == 0));
+    PRINT(assert(my_strcmp("", NULL) > 0));
+    PRINT(assert(my_strcmp(NULL, "") < 0));
+    PRINT(assert(my_strcmp("", "") == 0));
+
+    my_char('\n');
+
+    PRINT(assert(my_strncmp("sup", "sup", 3) == 0));
+    PRINT(assert(my_strncmp("su", "sup", 3) < 0));
+    PRINT(assert(my_strncmp("su", "sup", 2) == 0));
+    PRINT(assert(my_strncmp("su", "sup", 1) == 0));
+    PRINT(assert(my_strncmp("sup", "su", 2) == 0));
+    PRINT(assert(my_strncmp("abc", "abd", 3) < 0));
+    PRINT(assert(my_strncmp("abd", "abc", 3) > 0));
+    PRINT(assert(my_strncmp(NULL, NULL, 0) == 0));
+    PRINT(assert(my_strncmp(NULL, NULL, 5) == 0));
+    PRINT(assert(my_strncmp("", NULL, 1) > 0));
+    PRINT(assert(my_strncmp(NULL, "", 1) < 0));
+    PRINT(assert(my_strncmp("", "", 1) == 0));
+    PRINT(assert(my_strncmp("totally", "different", 0) == 0));
+
+    my_char('\n');
+
+    PRINT({
+        char x[] = "hello";
+        assert(my_strcpy(x, "bye") == x);
+        assert(my_strcmp(x, "bye") == 0);
+    });
+
+    PRINT({
+        char x[] = "hello";
+        assert(my_strcpy(x, "") == x);
+        assert(my_strcmp(x, "") == 0);
+    });
+
+    PRINT({
+        char x[] = "hello";
+        assert(my_strcpy(x, "") == x);
+        assert(my_strcmp(x, "") == 0);
+    });
+
+    PRINT(assert(my_strcpy(NULL, "source") == NULL));
+
+    PRINT({
+        char x[] = "hello";
+        assert(my_strcpy(x, NULL) == x);
+        assert(my_strcmp(x, "hello") == 0); // TODO: should this be "" or "hello"
+    });
+
+    PRINT({
+        char x[] = "hello";
+        assert(my_strncpy(x, "bye", 4) == x);
+        assert(my_strcmp(x, "bye") == 0);
+    });
+
+    PRINT({
+        char x[] = "hello";
+        assert(my_strncpy(x, "bye", 2) == x);
+        assert(my_strcmp(x, "byllo") == 0);
+    });
+
+    my_char('\n');
+
+    PRINT({
+        char x[10+1] = "hello";
+        assert(my_strcat(x, "world") == x);
+        assert(my_strcmp(x, "helloworld") == 0);
+    });
+
+    PRINT({
+        char x[5+1] = "hello";
+        assert(my_strcat(x, NULL) == x);
+        assert(my_strcmp(x, "hello") == 0);
+    });
+
+    PRINT({
+        assert(my_strcat(NULL, "world") == NULL);
+    });
+
+    PRINT({
+        char *x = "g eazy";
+        char *copy = my_strdup(x);
+        assert(copy != x);
+        assert(my_strcmp(copy, x) == 0);
+        assert(my_strcmp(copy, "g eazy") == 0);
+        free(copy);
+    });
+
+    my_char('\n');
+
+    PRINT({
+        char *a = "hello";
+        char *b = "world";
+        char *new = my_strconcat(a, b);
+        assert(my_strcmp(new, "helloworld") == 0);
+        free(new);
+    });
+
+    PRINT({
+        char *new = my_strconcat("hello", NULL);
+        assert(my_strcmp(new, "hello") == 0);
+        free(new);
+    });
+
+    PRINT({
+        char *new = my_strconcat(NULL, "world");
+        assert(my_strcmp(new, "world") == 0);
+        free(new);
+    });
+
+    PRINT({
+        char *a = "hello";
+        char *b = "world";
+        char *new = my_strnconcat(a, b, 3);
+        printf("%s\n", new);
+        assert(my_strcmp(new, "hellowor") == 0);
+        free(new);
+    });
+
+    PRINT({
+        char *new = my_strnconcat("hello", NULL, 10);
+        assert(my_strcmp(new, "hello") == 0);
+        free(new);
+    });
+
+    PRINT({
+        char *new = my_strnconcat(NULL, "world", 3);
+        assert(my_strcmp(new, "wor") == 0);
+        free(new);
+    });
+
+    my_char('\n');
+
+    PRINT(assert(my_atoi(NULL) == 0));
+    PRINT(assert(my_atoi("") == 0));
+    PRINT(assert(my_atoi("1234") == 1234));
+    PRINT(assert(my_atoi("12034") == 12034));
+    PRINT(assert(my_atoi("450") == 450));
+    PRINT(assert(my_atoi("4-50") == 4));
+    PRINT(assert(my_atoi("1ab2") == 1));
+    PRINT(assert(my_atoi("1-2") == 1));
+    PRINT(assert(my_atoi("-ab12") == -12));
+    PRINT(assert(my_atoi("12-") == 12));
+    PRINT(assert(my_atoi("5") == 5));
+    PRINT(assert(my_atoi("-5") == -5));
+    PRINT(assert(my_atoi("--5") == 5));
+    PRINT(assert(my_atoi("a-b54sc7-d") == -54));
+    PRINT(assert(my_atoi("abcd") == 0));
+    PRINT(assert(my_atoi("2147483647") == 2147483647));
+    PRINT(assert(my_atoi("-2147483648") == -2147483648));
 
     my_str("\n--------- done ---------\n");
 }
