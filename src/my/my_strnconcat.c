@@ -13,7 +13,7 @@ char *my_strnconcat(char *a, char *b, int n)
         int len = my_strlen(b) < n ? my_strlen(b) : n;
         char *new = malloc(len + 1);
         my_strncpy(new, b, len);
-        new[len+1] = '\0';
+        new[len] = '\0';
         return new;
     }
 
@@ -25,7 +25,7 @@ char *my_strnconcat(char *a, char *b, int n)
 
     char *new = malloc(lena + lenb + 1);
     my_strcpy(new, a);
-    my_strncpy(new + lena, b, n);
-    new[lena + n + 1] = '\0';
+    my_strncpy(new + lena, b, lenb);
+    new[lena + lenb] = '\0';
     return new;
 }
