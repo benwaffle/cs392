@@ -1,5 +1,11 @@
 #include "my.h"
 
+/**
+ *  Allocates new memory
+ * Copies concatenated strings in that new memory
+ * Returns pointer to it
+ * If both NULL return NULL
+ */
 char *my_strconcat(char *a, char *b)
 {
     if (a == NULL && b == NULL)
