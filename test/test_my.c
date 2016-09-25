@@ -231,6 +231,12 @@ int main()
 
     PRINT({
         char x[] = "hello";
+        assert(my_strncpy(x, "bye", 3) == x);
+        assert(my_strcmp(x, "byelo") == 0);
+    });
+
+    PRINT({
+        char x[] = "hello";
         assert(my_strncpy(x, "bye", 2) == x);
         assert(my_strcmp(x, "byllo") == 0);
     });
@@ -290,7 +296,6 @@ int main()
         char *a = "hello";
         char *b = "world";
         char *new = my_strnconcat(a, b, 3);
-        printf("%s\n", new);
         assert(my_strcmp(new, "hellowor") == 0);
         free(new);
     });
@@ -326,6 +331,8 @@ int main()
     PRINT(assert(my_atoi("abcd") == 0));
     PRINT(assert(my_atoi("2147483647") == 2147483647));
     PRINT(assert(my_atoi("-2147483648") == -2147483648));
+    PRINT(assert(my_atoi("-b-54") == 54));
+    PRINT(assert(my_atoi("-b-c54") == 54));
 
     my_str("\n--------- done ---------\n");
 }
