@@ -1,4 +1,4 @@
-BIN = test_my lab_one lab_two
+BIN = testmy lab_one lab_two
 CFLAGS += -g -Wall -Werror -pedantic -std=c99 -I ../include
 LDLIBS += -L../lib -lmy
 
@@ -6,8 +6,8 @@ LDLIBS += -L../lib -lmy
 
 all: $(BIN)
 
-check: test_my
-	./test_my
+check: testmy
+	./testmy
 
 fclean:
 	rm -f $(BIN)
