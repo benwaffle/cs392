@@ -1,15 +1,15 @@
 run: fclean all
-	make -C test/ check
+	$(MAKE) -C test/ check
 
 all:
-	make -C src/my/ all
-	make -C test/ all
+	$(MAKE) -C src/my/ all
+	$(MAKE) -C test/ all
 
 clean:
-	make -C src/my/ clean
+	$(MAKE) -C src/my/ clean
 
 fclean:
-	make -C src/my/ fclean
-	make -C test/ fclean
+	$(MAKE) -C src/my/ fclean
+	$(MAKE) -C test/ fclean
 
 re: clean fclean all
