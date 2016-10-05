@@ -31,9 +31,9 @@ CFLAGS += -I../../include -g -std=c99 -Wall -Werror -pedantic
 all: ../../lib/libmy.a
 
 clean:
-	rm -f $(OBJ)
+	$(RM) $(OBJ)
 
 fclean:
-	rm -f ../../lib/libmy.a
+	$(RM) ../../lib/libmy.a
 
 re: fclean all
