@@ -13,3 +13,5 @@ fclean:
 	$(MAKE) -C test/ fclean
 
 re: clean fclean all
+
+.PHONY: run all clean fclean re

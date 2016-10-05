@@ -24,7 +24,6 @@ SRC := \
 OBJ := $(SRC:.c=.o)
 CFLAGS += -I../../include -g -std=c99 -Wall -Werror -pedantic
 
-.PHONY: all clean fclean
 ../../lib/libmy.a: $(OBJ)
 	$(AR) rcs $@ $^
 
@@ -37,3 +36,5 @@ fclean:
 	$(RM) ../../lib/libmy.a
 
 re: fclean all
+
+.PHONY: all clean fclean re
