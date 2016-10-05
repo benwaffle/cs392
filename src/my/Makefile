@@ -1,4 +1,4 @@
-SRC = \
+SRC := \
 	  my_alpha.c \
 	  my_atoi.c \
 	  my_char.c \
@@ -21,7 +21,7 @@ SRC = \
 	  my_strrfind.c \
 	  my_strrindex.c
 
-OBJ = $(SRC:.c=.o)
+OBJ := $(SRC:.c=.o)
 CFLAGS += -I../../include -g -std=c99 -Wall -Werror -pedantic
 
 .PHONY: all clean fclean

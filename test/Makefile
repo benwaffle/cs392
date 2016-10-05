@@ -1,4 +1,4 @@
-BIN = testmy lab_one lab_two
+BIN := testmy lab_one lab_two
 CFLAGS += -g -Wall -Werror -pedantic -std=c99 -I ../include
 LDLIBS += -L../lib -lmy
 
