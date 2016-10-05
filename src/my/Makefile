@@ -25,9 +25,10 @@ OBJ := $(SRC:.c=.o)
 CFLAGS += -I../../include -g -std=c99 -Wall -Werror -pedantic
 
 .PHONY: all clean fclean
+../../lib/libmy.a: $(OBJ)
+	$(AR) rcs $@ $^
 
-all: $(OBJ)
-	ar rcs ../../lib/libmy.a $^
+all: ../../lib/libmy.a
 
 clean:
 	rm -f $(OBJ)
