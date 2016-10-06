@@ -18,14 +18,6 @@ void assert_failed(char *p, char *file, int line) {
     kill(getpid(), SIGABRT); // suicide
 }
 
-// test code that prints to stdout
-#define PRTEST(code) { \
-    my_str(#code); \
-    my_str(": "); \
-    code; \
-    my_char('\n'); \
-}
-
 void note(char *s) {
     my_str("\x1B[33m");
     my_str(s);
@@ -42,30 +34,64 @@ int main()
 {
     my_str("\n\n\n");
     struct s_node *head;
+    struct s_node *null_head = NULL;
+
     int *i1 = mkint(1), *i2 = mkint(2), *i3 = mkint(3);
 
     note("NULL checks\n");
     head = new_node(NULL, NULL, NULL);
     add_node(NULL, &head);
     assert(head->next == NULL && head->prev == NULL);
+    struct s_node *nn = new_node("hey", NULL, NULL);
+    add_node(nn, NULL);
+    assert(nn->prev == NULL && nn->next == NULL);
+    add_node(nn, &null_head);
+    debug_string(null_head);
+    my_char('\n');
+    assert(my_strcmp(elem_at(null_head, 0), "hey") == 0);
+    empty_list(&null_head);
+    assert(null_head == NULL);
     struct s_node *s = new_node(NULL, NULL, NULL);
     add_node(s, &head);
+    assert(count_s_nodes(head) == 1);
     remove_node(&s);
     assert(s == NULL);
+    add_elem(NULL, &head);
+    assert(count_s_nodes(head) == 1);
     assert(head->next == NULL && head->prev == NULL);
     append(NULL, &head);
     assert(head->next == NULL && head->prev == NULL);
+    s = new_node("hi", NULL, NULL);
+    null_head = NULL;
+    append(s, &null_head);
+    assert(null_head != NULL);
+    assert(my_strcmp(null_head->elem, "hi") == 0);
+    empty_list(&null_head);
     s = new_node(NULL, NULL, NULL);
     append(s, &head);
     remove_node(&s);
     assert(head->next == NULL && head->prev == NULL);
     add_node_at(NULL, &head, 0);
     assert(head->next == NULL && head->prev == NULL);
+    s = new_node("ok", NULL, NULL);
+    add_node_at(s, &null_head, 0);
+    assert(my_strcmp(null_head->elem, "ok") == 0);
+    empty_list(&null_head);
     s = new_node(NULL, NULL, NULL);
     add_node_at(s, &head, 0);
     void *nullelem = remove_node(&s);
     assert(nullelem == NULL);
     assert(head->next == NULL && head->prev == NULL);
+    assert(remove_node(NULL) == NULL);
+    assert(remove_node(&null_head) == NULL);
+    assert(remove_last(NULL) == NULL);
+    assert(remove_last(&null_head) == NULL);
+    assert(remove_node_at(NULL, 109238) == NULL);
+    assert(remove_node_at(&null_head, 109238) == NULL);
+    s = new_node("ok", NULL, NULL);
+    add_node_at(s, &head, -20);
+    assert(s->prev == NULL && s->next == NULL);
+    remove_node(&s);
 
     traverse_int(head);
     debug_int(head);
@@ -76,12 +102,14 @@ int main()
     assert(node_at(NULL, 42) == NULL);
     assert(elem_at(NULL, 42) == NULL);
     assert(count_s_nodes(NULL) == 0);
+    empty_list(NULL);
 
     my_str("\n-------\n");
 
     head = new_node(i3, NULL, NULL);
     traverse_int(head);
     debug_int(head);
+    my_char('\n');
     assert(remove_node(&head) == i3);
     assert(head == NULL);
 
@@ -89,6 +117,7 @@ int main()
 
     head = new_node(i1, NULL, NULL);
     add_elem(i2, &head);
+    assert(node_at(head, -20) == head);
     note("added 1, 2\n");
     assert(*(int*)head->elem == 2);
     traverse_int(head);
@@ -177,6 +206,7 @@ int main()
     assert(my_strcmp(head->elem, "new-head") == 0);
     traverse_string(head);
     my_char('\n');
+    add_node_at(new_node("index-0", NULL, NULL), &head, 0);
     add_node_at(new_node("index-1", NULL, NULL), &head, 1);
     add_node_at(new_node("last-node", NULL, NULL), &head, 99);
     add_node_at(new_node("index-3", NULL, NULL), &head, 3);
@@ -190,11 +220,35 @@ int main()
 
     my_str("\n-------\n");
 
+    note("checking that add_node_at can add before last node AND after all nodes\n");
+    head = new_node("4", NULL, NULL);
+    add_elem("3", &head);
+    add_elem("2", &head);
+    add_elem("1", &head);
+    add_elem("0", &head);
+    traverse_string(head); my_char('\n');
+    add_node_at(new_node("inserted-in-pos-3", NULL, NULL), &head, 3);
+    assert(my_strcmp(elem_at(head, 3), "inserted-in-pos-3") == 0);
+    traverse_string(head); my_char('\n');
+    remove_node_at(&head, 3);
+    traverse_string(head); my_char('\n');
+    add_node_at(new_node("inserted-in-pos-4", NULL, NULL), &head, 4);
+    assert(my_strcmp(elem_at(head, 4), "inserted-in-pos-4") == 0);
+    traverse_string(head); my_char('\n');
+    remove_node_at(&head, 4);
+    add_node_at(new_node("tail", NULL, NULL), &head, 99);
+    traverse_string(head);
+
+    empty_list(&head);
+
+    my_str("\n-------\n");
+
     head = new_node("head", NULL, NULL);
     add_elem("new-head", &head);
     struct s_node *next = node_at(head, 1);
     append(new_node("new-tail", NULL, NULL), &head);
     traverse_string(head);
+    my_char('\n');
     remove_node(&head);
     assert(head == next);
     empty_list(&head);
