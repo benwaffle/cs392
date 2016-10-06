@@ -1,11 +1,11 @@
-BIN := testmy lab_one lab_two
+BIN := testlist testmy lab_one lab_two
 CFLAGS += -g -Wall -Werror -pedantic -std=c99 -I ../include
-LDLIBS += -L../lib -lmy
+LDLIBS += -L../lib -llist -lmy
 
 all: $(BIN)
 
-check: testmy
-	./testmy
+check: testlist
+	./testlist
 
 fclean:
 	rm -f $(BIN)

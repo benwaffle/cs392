@@ -3,13 +3,16 @@ run: fclean all
 
 all:
 	$(MAKE) -C src/my/ all
+	$(MAKE) -C src/list/ all
 	$(MAKE) -C test/ all
 
 clean:
 	$(MAKE) -C src/my/ clean
+	$(MAKE) -C src/list/ clean
 
 fclean:
 	$(MAKE) -C src/my/ fclean
+	$(MAKE) -C src/list/ fclean
 	$(MAKE) -C test/ fclean
 
 re: clean fclean all
