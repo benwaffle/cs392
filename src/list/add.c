@@ -7,12 +7,13 @@ void add_node(struct s_node* node, struct s_node** head)
 
 void add_elem(void* elem, struct s_node** head)
 {
-    add_node(new_node(elem, NULL, NULL), head);
+    if (elem != NULL)
+        add_node(new_node(elem, NULL, NULL), head);
 }
 
 void add_node_at(struct s_node* node, struct s_node** head, int n)
 {
-    if (head == NULL) // invalid
+    if (head == NULL || n < 0) // invalid
         return;
 
     if (node == NULL || node->elem == NULL) // null node

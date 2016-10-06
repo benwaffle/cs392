@@ -2,10 +2,10 @@
 
 void* remove_node(struct s_node** node)
 {
-    struct s_node *mynode = *node; // create a copy of the node so we don't overwrite it
-
-    if (mynode == NULL)
+    if (node == NULL || *node == NULL)
         return NULL;
+
+    struct s_node *mynode = *node; // create a copy of the node so we don't overwrite it
 
     if (mynode->prev != NULL)
         mynode->prev->next = mynode->next;
@@ -42,6 +42,9 @@ void* remove_last(struct s_node** head)
 
 void* remove_node_at(struct s_node** head, int n)
 {
+    if (head == NULL || *head == NULL)
+        return NULL;
+
     struct s_node **loc = head;
 
     while ((*loc)->next != NULL && n > 0) {
