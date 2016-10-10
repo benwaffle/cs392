@@ -30,8 +30,14 @@ int main(int argc, char *argv[])
     int pipe1[2];
     int pipe2[2];
 
-    pipe(pipe1);
-    pipe(pipe2);
+    if (pipe(pipe1) < 0) {
+        perror("pipe");
+        return 1;
+    }
+    if (pipe(pipe2) < 0) {
+        perror("pipe");
+        return 1;
+    }
 
     pid_t child;
     pid_t gchild;
