@@ -297,6 +297,55 @@ int main()
     empty_list(&head);
     assert(count_s_nodes(head) == 0);
 
+    my_str("\n-------\n");
+
+    /**
+     * Slack messages:
+     * Adding a list to add_node or add_node_at should add just the single node
+     * Adding a list with append should add the node and all following
+     */
+
+    struct s_node *a = NULL, *b = NULL;
+    a = new_node("a1", NULL, NULL);
+    append(new_node("a2", NULL, NULL), &a);
+    append(new_node("a3", NULL, NULL), &a);
+    note("list a: ");
+    traverse_string(a);
+    my_char('\n');
+
+    b = new_node("b1", NULL, NULL);
+    append(new_node("b2", NULL, NULL), &b);
+    append(new_node("b3", NULL, NULL), &b);
+    note("list b: ");
+    traverse_string(b);
+    my_char('\n');
+
+    note("add_node b to a\n");
+    struct s_node *new_b = b->next;
+    add_node(b, &a);
+    b = new_b;
+    note("a: ");
+    traverse_string(a);
+    my_char('\n');
+    assert(count_s_nodes(a) == 4);
+    note("b: ");
+    traverse_string(b);
+    my_char('\n');
+    assert(count_s_nodes(b) == 2);
+
+    note("add_node_at b to a\n");
+    add_node_at(b->next, &a, 3);
+    note("a: ");
+    traverse_string(a);
+    my_char('\n');
+    assert(count_s_nodes(a) == 5);
+    note("b: ");
+    traverse_string(b);
+    my_char('\n');
+    assert(count_s_nodes(b) == 1);
+
+    my_char('\n');
+
     // make sure nothing changed these
     assert(*i1 == 1);
     assert(*i2 == 2);

@@ -13,6 +13,12 @@ void add_node_at(struct s_node* node, struct s_node** head, int n)
         return;
     }
 
+    // in case node is in another list
+    if (node->prev != NULL)
+        node->prev->next = node->next;
+    if (node->next != NULL)
+        node->next->prev = node->prev;
+
     if (n == 0) { // add at head
         node->next = *head;
         (*head)->prev = node;
