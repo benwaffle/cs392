@@ -27,38 +27,3 @@ void* remove_node(struct s_node** node)
 
     return elem;
 }
-
-void* remove_last(struct s_node** head)
-{
-    if (head == NULL || *head == NULL)
-        return NULL;
-
-    struct s_node **last = head;
-    while ((*last)->next != NULL)
-        last = &(*last)->next;
-
-    return remove_node(last);
-}
-
-void* remove_node_at(struct s_node** head, int n)
-{
-    if (head == NULL || *head == NULL)
-        return NULL;
-
-    struct s_node **loc = head;
-
-    while ((*loc)->next != NULL && n > 0) {
-        --n;
-        loc = &(*loc)->next;
-    }
-
-    return remove_node(loc);
-}
-
-void empty_list(struct s_node** head)
-{
-    if (head == NULL)
-        return;
-    while (*head)
-        remove_node(head);
-}

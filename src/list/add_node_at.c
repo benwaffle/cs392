@@ -1,16 +1,5 @@
 #include "list.h"
 
-void add_node(struct s_node* node, struct s_node** head)
-{
-    add_node_at(node, head, 0);
-}
-
-void add_elem(void* elem, struct s_node** head)
-{
-    if (elem != NULL)
-        add_node(new_node(elem, NULL, NULL), head);
-}
-
 void add_node_at(struct s_node* node, struct s_node** head, int n)
 {
     if (head == NULL || n < 0) // invalid
