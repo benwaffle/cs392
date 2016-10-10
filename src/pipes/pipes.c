@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/wait.h>
 #include <sys/types.h>
 #include "my.h"
 
@@ -56,6 +57,7 @@ int main(int argc, char *argv[])
         free(msg);
 
         close(wfd);
+        wait(NULL);
     } else { // child
         if ((gchild = fork()) < 0) {
             perror("fork");
@@ -73,6 +75,7 @@ int main(int argc, char *argv[])
 
             close(rfd);
             close(wfd);
+            wait(NULL);
         } else { // grandchild
             close(pipe1[0]);
             close(pipe1[1]);
