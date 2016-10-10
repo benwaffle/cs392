@@ -26,44 +26,55 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    int pipefd1[2]; // 0 - read, 1 - write
-    pipe(pipefd1);
+    // 0 - read, 1 - write
+    int pipe1[2];
+    int pipe2[2];
+
+    pipe(pipe1);
+    pipe(pipe2);
 
     pid_t child;
+    pid_t gchild;
+
     if ((child = fork()) < 0) {
         perror("fork");
         return 1;
     } else if (child > 0) { // parent
-        close(pipefd1[0]);
+        close(pipe1[0]);
+        int wfd = pipe1[1];
+
         char *msg = my_vect2str(argv+1);
         printf("Parent: %s\n", msg);
-        write(pipefd1[1], msg, my_strlen(msg));
-        close(pipefd1[1]);
+        write(wfd, msg, my_strlen(msg));
+
+        close(wfd);
     } else { // child
-        close(pipefd1[1]);
-
-        int pipefd2[2]; // 0 - read, 1 - write
-        pipe(pipefd2);
-        pid_t gchild;
-
         if ((gchild = fork()) < 0) {
             perror("fork");
             return 1;
         } else if (gchild > 0) { // child
-            close(pipefd2[0]); 
-            char msg[100];
-            ssize_t size = read(pipefd1[0], &msg, 100);
-            msg[size] = '\0';
+            close(pipe1[1]);
+            close(pipe2[0]);
+            int rfd = pipe1[0];
+            int wfd = pipe2[1];
+
+            char msg[100] = {0};
+            ssize_t size = read(rfd, &msg, 100);
             printf("Child: %s\n", msg);
-            write(pipefd2[1], msg, size);
-            close(pipefd2[1]);
+            write(wfd, msg, size);
+
+            close(rfd);
+            close(wfd);
         } else { // grandchild
-            close(pipefd2[1]); 
-            char msg[100];
-            ssize_t size = read(pipefd2[0], &msg, 100);
-            msg[size] = '\0';
+            close(pipe1[0]);
+            close(pipe1[1]);
+            close(pipe2[1]);
+            int rfd = pipe2[0];
+
+            char msg[100] = {0};
+            read(rfd, &msg, 100);
             printf("Grandchild: %s\n", msg);
-            close(pipefd2[0]);
+            close(rfd);
         }
     }
 }
