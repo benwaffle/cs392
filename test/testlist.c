@@ -344,6 +344,15 @@ int main()
     my_char('\n');
     assert(count_s_nodes(b) == 1);
 
+    note("add node a[1] to list a\n");
+    note("a: ");
+    traverse_string(a);
+    my_char('\n');
+    add_node(a->next, &a);
+    note("a: ");
+    traverse_string(a);
+    my_char('\n');
+
     my_char('\n');
 
     // make sure nothing changed these
