@@ -9,6 +9,7 @@ char *my_vect2str(char **x)
     for (char **y = x+1; *y != NULL; y++) {
         len += 1 + my_strlen(*y);
     }
+    len++; // null terminator
 
     char *s = malloc(len);
     my_strcpy(s, *x);
@@ -52,6 +53,7 @@ int main(int argc, char *argv[])
         char *msg = my_vect2str(argv+1);
         printf("Parent: %s\n", msg);
         write(wfd, msg, my_strlen(msg));
+        free(msg);
 
         close(wfd);
     } else { // child
