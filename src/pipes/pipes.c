@@ -57,7 +57,10 @@ int main(int argc, char *argv[])
         free(msg);
 
         close(wfd);
-        wait(NULL);
+        if (wait(NULL) < 0) {
+            perror("wait");
+            return 1;
+        }
     } else { // child
         if ((gchild = fork()) < 0) {
             perror("fork");
@@ -75,7 +78,10 @@ int main(int argc, char *argv[])
 
             close(rfd);
             close(wfd);
-            wait(NULL);
+            if (wait(NULL) < 0) {
+                perror("wait");
+                return 1;
+            }
         } else { // grandchild
             close(pipe1[0]);
             close(pipe1[1]);
