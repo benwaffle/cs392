@@ -19,7 +19,8 @@ SRC := \
 	  my_strncmp.c \
 	  my_strnconcat.c \
 	  my_strrfind.c \
-	  my_strrindex.c
+	  my_strrindex.c \
+	  my_vect2str.c
 
 OBJ := $(SRC:.c=.o)
 CFLAGS += -I../../include -g -std=c99 -Wall -Werror -pedantic
