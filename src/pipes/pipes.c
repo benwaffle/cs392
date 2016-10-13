@@ -4,6 +4,12 @@
 #include <sys/types.h>
 #include "my.h"
 
+#define CHECK(x) \
+    if ((x) < 0) { \
+        perror(#x); \
+        return 1; \
+    }
+
 int main(int argc, char *argv[])
 {
     if (argc <= 1) {
@@ -15,14 +21,8 @@ int main(int argc, char *argv[])
     int pipe1[2];
     int pipe2[2];
 
-    if (pipe(pipe1) < 0) {
-        perror("pipe");
-        return 1;
-    }
-    if (pipe(pipe2) < 0) {
-        perror("pipe");
-        return 1;
-    }
+    CHECK(pipe(pipe1))
+    CHECK(pipe(pipe2))
 
     pid_t child;
     pid_t gchild;
@@ -31,50 +31,45 @@ int main(int argc, char *argv[])
         perror("fork");
         return 1;
     } else if (child > 0) { // parent
-        close(pipe1[0]);
+        CHECK(close(pipe1[0]))
         int wfd = pipe1[1];
 
         char *msg = my_vect2str(argv+1);
         printf("Parent: %s\n", msg);
-        write(wfd, msg, my_strlen(msg));
+        CHECK(write(wfd, msg, my_strlen(msg)))
         free(msg);
 
-        close(wfd);
-        if (wait(NULL) < 0) {
-            perror("wait");
-            return 1;
-        }
+        CHECK(close(wfd))
+        CHECK(wait(NULL))
     } else { // child
         if ((gchild = fork()) < 0) {
             perror("fork");
             return 1;
         } else if (gchild > 0) { // child
-            close(pipe1[1]);
-            close(pipe2[0]);
+            CHECK(close(pipe1[1]))
+            CHECK(close(pipe2[0]))
             int rfd = pipe1[0];
             int wfd = pipe2[1];
 
             char msg[100] = {0};
-            ssize_t size = read(rfd, &msg, 100);
+            ssize_t size;
+            CHECK(size = read(rfd, &msg, 100))
             printf("Child: %s\n", msg);
-            write(wfd, msg, size);
+            CHECK(write(wfd, msg, size))
 
-            close(rfd);
-            close(wfd);
-            if (wait(NULL) < 0) {
-                perror("wait");
-                return 1;
-            }
+            CHECK(close(rfd))
+            CHECK(close(wfd))
+            CHECK(wait(NULL))
         } else { // grandchild
-            close(pipe1[0]);
-            close(pipe1[1]);
-            close(pipe2[1]);
+            CHECK(close(pipe1[0]))
+            CHECK(close(pipe1[1]))
+            CHECK(close(pipe2[1]))
             int rfd = pipe2[0];
 
             char msg[100] = {0};
-            read(rfd, &msg, 100);
+            CHECK(read(rfd, &msg, 100))
             printf("Grandchild: %s\n", msg);
-            close(rfd);
+            CHECK(close(rfd))
         }
     }
 }
