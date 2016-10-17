@@ -1,8 +1,8 @@
 #include "my.h"
 
 /**
- * Reverse the string, directly in the actual string, without creating a new
- * string. Return the length of the string.
+ * Returns a pointer to the first char in the string which matches.
+ * Return NULL if the letter is not found.
  */
 char *my_strfind(char *str, char c)
 {
