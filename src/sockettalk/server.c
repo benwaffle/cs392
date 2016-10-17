@@ -64,31 +64,6 @@ void handle_client(int fd)
     my_str("["); my_int(fd); my_str("] ");
     my_str("event\n");
 
-    /*
-    size_t len = 0;
-    char *msg = NULL;
-    ssize_t s;
-    while (1) {
-        size_t new_len = len + 1024;
-        msg = realloc(msg, new_len);
-        s = recv(fd, msg + len, 1024, MSG_DONTWAIT);
-        len = new_len;
-
-        if (s == 1024) {
-            // read 1024 bytes
-            // continue
-        } else if (s < 1024) {
-            // read some bytes
-            break;
-        } else if (s == -EAGAIN || s == -EWOULDBLOCK) {
-            printf("no more data\n");
-            break;
-        } else if (s == 0) {
-            break;
-        }
-    }
-    */
-
     int i = 0;
     for (struct s_node *x = clients; x != NULL; x = x->next, ++i)
         if (fd == ((client*)x->elem)->fd)
