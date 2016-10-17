@@ -103,6 +103,9 @@ void handle_client(int fd)
 
         remove_node_at(&clients, i);
         close(fd);
+        char *msg = my_strconcat(c->username, " left");
+        send_msg(msg, my_strlen(msg));
+        free(msg);
         free(c);
 
         return;
