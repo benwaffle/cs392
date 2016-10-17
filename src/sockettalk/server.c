@@ -51,14 +51,18 @@ typedef struct {
 
 void send_msg(const char *msg, int len)
 {
-    printf("Sending %s\n", msg);
+    my_str("Sending `");
+    my_str((void*)msg);
+    my_str("'\n");
+
     for (struct s_node *c = clients; c != NULL; c = c->next)
         send(((client*)c->elem)->fd, msg, len, 0);
 }
 
 void handle_client(int fd)
 {
-    printf("something happened on %d\n", fd);
+    my_str("["); my_int(fd); my_str("] ");
+    my_str("event\n");
 
     /*
     size_t len = 0;
@@ -94,6 +98,7 @@ void handle_client(int fd)
     char buf[1024];
     ssize_t s = recv(fd, buf, sizeof buf, 0);
     if (s == 0) {
+        my_str("["); my_int(fd); my_str("] ");
         my_str("socket closed\n");
 
         remove_node_at(&clients, i);
@@ -105,7 +110,11 @@ void handle_client(int fd)
     buf[s] = '\0';
 
     if (c->username == NULL) {
-        printf("%d username = %s\n", fd, buf);
+        my_str("["); my_int(fd); my_str("] ");
+        my_str("username = ");
+        my_str(buf);
+        my_char('\n');
+
         c->username = my_strdup(buf);
         char *msg = my_strconcat(c->username, " joined");
         send_msg(msg, my_strlen(msg));
@@ -153,7 +162,10 @@ void handle_server(int sock)
     char ip[INET_ADDRSTRLEN];
     inet_ntop(addr.sin_family, &addr.sin_addr, ip, sizeof ip);
 
-    printf("new connection: %s\n", ip);
+    my_str("["); my_int(newfd); my_str("] ");
+    my_str("new connection from ");
+    my_str(ip);
+    my_char('\n');
 
     client *c = calloc(1, sizeof *c);
     c->fd = newfd;
