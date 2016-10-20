@@ -100,6 +100,24 @@ int main(int argc, char *argv[])
 
     send(sock, username, my_strlen(username), 0);
 
+    while (1) {
+        char *msg = read_socket(sock);
+        if (msg == NULL) {
+            return 1;
+        }
+        char ok[] = "good username";
+        if (my_strncmp(msg, ok, sizeof ok - 1) == 0) {
+            free(msg);
+            break;
+        }
+        free(msg);
+
+        my_str("That username is already in use. Please try again.\nUsername: ");
+        username = read_stdin();
+
+        send(sock, username, my_strlen(username), 0);
+    }
+
     struct pollfd fds[2] = {
         {
             .fd = 0, // stdin

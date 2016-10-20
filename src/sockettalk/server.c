@@ -55,8 +55,11 @@ void send_msg(const char *msg, int len)
     my_str((void*)msg);
     my_str("'\n");
 
-    for (struct s_node *c = clients; c != NULL; c = c->next)
-        send(((client*)c->elem)->fd, msg, len, 0);
+    for (struct s_node *c = clients; c != NULL; c = c->next) {
+        client *cl = c->elem;
+        if (cl->username != NULL) // don't send messages to users still negotiating a username, it breaks their process
+            send(cl->fd, msg, len, 0);
+    }
 }
 
 void handle_client(int fd)
@@ -88,10 +91,25 @@ void handle_client(int fd)
     buf[s] = '\0';
 
     if (c->username == NULL) {
+        for (struct s_node *c = clients; c != NULL; c = c->next) {
+            if (my_strcmp(((client*)c->elem)->username, buf) == 0) {
+                const char msg[] = "bad username";
+                send(fd, msg, sizeof msg - 1, 0);
+                my_str("["); my_int(fd); my_str("] ");
+                my_str("username `");
+                my_str(buf);
+                my_str("' already in use\n");
+                return;
+            }
+        }
+
         my_str("["); my_int(fd); my_str("] ");
         my_str("username = ");
         my_str(buf);
         my_char('\n');
+
+        const char ok[] = "good username";
+        send(fd, ok, sizeof ok - 1, 0);
 
         c->username = my_strdup(buf);
         char *msg = my_strconcat(c->username, " joined");
@@ -118,8 +136,8 @@ void handle_client(int fd)
             free(p1);
             free(msg);
        } else {
-           char msg[] = "Error: invalid command";
-           send(c->fd, msg, sizeof msg, 0);
+           const char msg[] = "Error: invalid command";
+           send(c->fd, msg, sizeof msg - 1, 0);
        }
     } else {
         char *p1 = my_strconcat(c->username, ": ");
