@@ -61,13 +61,13 @@ LIST_LIB := lib/liblist.a
 
 
 
-PIPES_BIN = src/pipes/pipes
+PIPES_BIN := src/pipes/pipes
 
-SIGNALS_BIN = src/signals/signals
+SIGNALS_BIN := src/signals/signals
 
-SOCKET_BIN = src/socket/socket
+SOCKET_BIN := src/socket/socket
 
-SOCKETTALK_BIN = \
+SOCKETTALK_BIN := \
 	 src/sockettalk/server \
 	 src/sockettalk/client
 
