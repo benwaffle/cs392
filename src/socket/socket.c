@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+#define _DEFAULT_SOURCE // inet_aton()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     addr.sin_port = htons(port);
     addr.sin_addr = inp;
 
-    connect(sock, &addr, sizeof(addr));
+    connect(sock, (struct sockaddr *)&addr, sizeof(addr));
 
     int len = strlen(msg);
 

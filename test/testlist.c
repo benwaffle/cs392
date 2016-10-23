@@ -1,4 +1,3 @@
-#define _GNU_SOURCE
 #include "list.h"
 #include <stdio.h>
 #include <unistd.h>
