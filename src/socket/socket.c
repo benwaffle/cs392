@@ -1,4 +1,4 @@
-#define _DEFAULT_SOURCE // inet_aton()
+#define _GNU_SOURCE // inet_aton()
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
