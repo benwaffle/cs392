@@ -35,5 +35,6 @@ char *my_strnconcat(char*, char*, int);
 int my_atoi(char*);
 
 char *my_vect2str(char**);
+char **my_str2vect(char*);
 
 #endif

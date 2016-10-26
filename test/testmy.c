@@ -333,5 +333,14 @@ int main()
     PRINT(assert(my_atoi("-b-54") == 54));
     PRINT(assert(my_atoi("-b-c54") == 54));
 
+    my_char('\n');
+
+    PRINT(assert(my_strcmp(my_vect2str(my_str2vect("")), "") == 0));
+    PRINT(assert(my_strcmp(my_vect2str(my_str2vect("hello")), "hello") == 0));
+    PRINT(assert(my_strcmp(my_vect2str(my_str2vect("a b")), "a b") == 0));
+    PRINT(assert(my_strcmp(my_vect2str(my_str2vect(" c d")), "c d") == 0));
+    PRINT(assert(my_strcmp(my_vect2str(my_str2vect(" e  f  ")), "e f") == 0));
+    PRINT(assert(my_strcmp(my_vect2str(my_str2vect("hello \t\t\n class,\nhow are you?")), "hello class, how are you?") == 0));
+
     my_str("\n--------- done ---------\n");
 }

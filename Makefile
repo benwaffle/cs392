@@ -11,6 +11,7 @@ MY_SRC := \
 	  src/my/my_num_base.c \
 	  src/my/my_revstr.c \
 	  src/my/my_str.c \
+	  src/my/my_str2vect.c \
 	  src/my/my_strcat.c \
 	  src/my/my_strcmp.c \
 	  src/my/my_strconcat.c \
