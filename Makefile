@@ -72,6 +72,8 @@ SOCKETTALK_BIN := \
 	 src/sockettalk/server \
 	 src/sockettalk/client
 
+MINISHELL_BIN := src/minishell/minishell
+
 # tests
 
 TESTS := \
@@ -89,7 +91,8 @@ all: \
 	$(PIPES_BIN) \
 	$(SIGNALS_BIN) \
 	$(SOCKET_BIN) \
-	$(SOCKETTALK_BIN)
+	$(SOCKETTALK_BIN) \
+	$(MINISHELL_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -126,6 +129,7 @@ $(PIPES_BIN): $(MY_LIB)
 $(SIGNALS_BIN):
 $(SOCKET_BIN):
 $(SOCKETTALK_BIN): $(MY_LIB) $(LIST_LIB)
+$(MINISHELL_BIN): $(MY_LIB)
 
 # build archives
 %.a:
