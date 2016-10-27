@@ -74,6 +74,8 @@ SOCKETTALK_BIN := \
 
 MINISHELL_BIN := src/minishell/minishell
 
+MALLOC_BIN := src/malloc/malloc
+
 # tests
 
 TESTS := \
@@ -92,7 +94,8 @@ all: \
 	$(SIGNALS_BIN) \
 	$(SOCKET_BIN) \
 	$(SOCKETTALK_BIN) \
-	$(MINISHELL_BIN)
+	$(MINISHELL_BIN) \
+	$(MALLOC_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -130,6 +133,7 @@ $(SIGNALS_BIN):
 $(SOCKET_BIN):
 $(SOCKETTALK_BIN): $(MY_LIB) $(LIST_LIB)
 $(MINISHELL_BIN): $(MY_LIB)
+$(MALLOC_BIN):
 
 # build archives
 %.a:
