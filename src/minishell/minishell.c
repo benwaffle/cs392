@@ -38,15 +38,18 @@ char *read_str(int fd)
     return msg;
 }
 
-pid_t child = 0;
-
-void sigint()
-{
-
-}
+void sigint_handler(int sig) {}
 
 int main() {
-    signal(SIGINT, sigint);
+    signal(SIGINT, sigint_handler);
+    sigset_t blocked;
+    sigemptyset(&blocked);
+    // we use sigaction for SA_RESTART
+    sigaction(SIGINT, &(struct sigaction) {
+        .sa_handler = sigint_handler, // can't use SIG_IGN, it turns this off
+        .sa_mask = blocked,
+        .sa_flags = SA_RESTART // restart interrupted signals
+    }, NULL);
 
     while (true) {
         my_str("MINISHELL: ");
@@ -69,8 +72,7 @@ int main() {
                     perror("cd");
                 }
             } else if (my_strcmp(parts[0], "exit") == 0) {
-                my_str("Bye!\n");
-                exit(0);
+                break;
             } else if (my_strcmp(parts[0], "help") == 0) {
                 my_str(
                     "Minishell Commands:\n"
@@ -79,6 +81,7 @@ int main() {
                     "\thelp - show this help message\n"
                 );
             } else { // run command
+                pid_t child;
                 if ((child = fork()) < 0) {
                     perror("fork");
                     exit(1);
@@ -94,8 +97,9 @@ int main() {
                     }
                     exit(0);
                 } else {
-                    child = 1;
-                    wait(NULL);
+                    if (wait(NULL) < 0) {
+                        perror("wait");
+                    }
                 }
             }
         }
@@ -105,4 +109,6 @@ int main() {
         free(parts);
         free(msg);
     }
+
+    my_str("Bye\n");
 }
