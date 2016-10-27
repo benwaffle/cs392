@@ -7,6 +7,16 @@
 #include <signal.h>
 #include "my.h"
 
+// colors
+#define KRST "\x1B[0m"
+#define KRED "\x1B[31m"
+#define KGRN "\x1B[32m"
+#define KYEL "\x1B[33m"
+#define KBLU "\x1B[34m"
+#define KMAG "\x1B[35m"
+#define KCYN "\x1B[36m"
+#define KWHT "\x1B[37m"
+
 // read an arbitrary-length string from fd
 char *read_str(int fd)
 {
@@ -52,13 +62,15 @@ int main() {
     }, NULL);
 
     while (true) {
-        my_str("MINISHELL: ");
+        my_str(KBLU);
 
         char path[PATH_MAX];
         getcwd(path, sizeof path);
         my_str(path);
 
+        my_str(KGRN);
         my_str(" ➜ ");
+        my_str(KRST);
 
         char *msg = read_str(0);
         if (msg == NULL)
