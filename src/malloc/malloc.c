@@ -17,6 +17,7 @@ void print_blocks() {
     printf("\t");
     for (block *b = head; b != NULL; b = b->next) {
         printf("block { size = %ld, mem = %p } -> ", b->size, (void*)((char*)b->mem + sizeof(block)));
+        fflush(stdout);
     }
     printf("\b \b\b \b\b \b\n---------\n");
 }
@@ -62,7 +63,7 @@ void *my_malloc(size_t size) {
             }
         }
 
-        // if we have a gap, use ti
+        // if we have a gap, use it
         if (prev != NULL) {
             printf("Got a gap!\n");
             void *mem = (char*)prev->mem + prev->size + sizeof(block);
@@ -110,6 +111,16 @@ void my_free(void *mem) {
     remove_node(b);
 }
 
+// be smarter to fit in current space
+void* my_realloc(void *mem, size_t sz) {
+    block *b = (void*)((char*)mem - sizeof(block));
+    void *new = my_malloc(sz); // new size;
+    for (int i = 0; i < sz && i < b->size; ++i)
+        ((char*)new)[i] = ((char*)mem)[i];
+    my_free(mem);
+    return new;
+}
+
 int main() {
     void *a = my_malloc(5);
     void *b = my_malloc(5);
@@ -121,12 +132,21 @@ int main() {
     printf("freed middle\n");
     print_blocks();
 
+    printf("allocating a block that can go in the gap\n");
     void *d = my_malloc(3);
     assert(b == d);
-    my_free(d);
+    print_blocks();
+
+    printf("allocating 10\n");
+    void *e = my_malloc(10);
+    print_blocks();
+
+    printf("realloc\n");
+    my_realloc(d, 10);
 
     a=a;
     c=c;
+    e=e;
 
 
     print_blocks();
