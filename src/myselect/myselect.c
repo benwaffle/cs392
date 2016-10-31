@@ -2,8 +2,10 @@
 
 int main() {
     initscr();
-    printw("Hello world");
+    printw("Hello world\n");
     refresh();
-    getch();
+    int c;
+    while ((c = getch()) == KEY_RESIZE)
+        printw("resized\n");
     endwin();
 }
