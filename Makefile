@@ -76,6 +76,8 @@ MINISHELL_BIN := src/minishell/minishell
 
 MALLOC_BIN := src/malloc/malloc
 
+MYSELECT_BIN := src/myselect/myselect
+
 # tests
 
 TESTS := \
@@ -95,7 +97,8 @@ all: \
 	$(SOCKET_BIN) \
 	$(SOCKETTALK_BIN) \
 	$(MINISHELL_BIN) \
-	$(MALLOC_BIN)
+	$(MALLOC_BIN) \
+	$(MYSELECT_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -109,6 +112,9 @@ fclean: clean
 	$(RM) $(SIGNALS_BIN)
 	$(RM) $(SOCKET_BIN)
 	$(RM) $(SOCKETTALK_BIN)
+	$(RM) $(MINISHELL_BIN)
+	$(RM) $(MALLOC_BIN)
+	$(RM) $(MYSELECT_BIN)
 
 re: fclean all
 
@@ -134,6 +140,7 @@ $(SOCKET_BIN):
 $(SOCKETTALK_BIN): $(MY_LIB) $(LIST_LIB)
 $(MINISHELL_BIN): $(MY_LIB)
 $(MALLOC_BIN):
+$(MYSELECT_BIN): LDLIBS = -lcurses
 
 # build archives
 %.a:
