@@ -54,11 +54,7 @@ void showlist(int count, char *list[], int curline, bool selected[]) {
 
         mvprintw(row, col, "%s", list[i]);
 
-        if (i == curline)
-            attroff(A_UNDERLINE);
-
-        if (selected[i])
-            attroff(A_STANDOUT);
+        attrset(0);
     }
 }
 
