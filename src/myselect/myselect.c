@@ -1,4 +1,6 @@
+#include <fcntl.h>
 #include <string.h>
+#include <unistd.h>
 #include <curses.h>
 #include <assert.h>
 #include <stdbool.h>
@@ -61,6 +63,14 @@ void showlist(int count, char *list[], int curline, bool selected[]) {
 }
 
 int main(int argc, char *argv[]) {
+    int out = 1;
+    if (!isatty(1)) {
+        // save stdout for subshells
+        out = dup(1);
+        // stdout = tty
+        dup2(open("/dev/tty", O_RDWR), 1);
+    }
+
     initscr();
     raw();
     noecho();
@@ -113,6 +123,9 @@ int main(int argc, char *argv[]) {
     }
 
     endwin();
+
+    // restore stdout
+    dup2(out, 1);
 
     if (c == '\n') {
         for (int i=0; i<argc; ++i)
