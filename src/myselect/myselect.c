@@ -11,11 +11,15 @@ int sum(int arr[], int size) {
     return s;
 }
 
-void showlist(int count, char *list[]) {
+int countcols(int count) {
+    return count / getmaxy(stdscr) + 1;
+}
+
+void showlist(int count, char *list[], int selected) {
     int width, height;
     getmaxyx(stdscr, height, width);
 
-    int cols = count / height + 1;
+    int cols = countcols(count);
 
     clear();
 
@@ -39,7 +43,13 @@ void showlist(int count, char *list[]) {
         int curcol = i / height;
         int col = sum(maxwidth, curcol);
 
+        if (i == selected)
+            attron(A_UNDERLINE);
+
         mvprintw(row, col, "%s", list[i]);
+
+        if (i == selected)
+            attroff(A_UNDERLINE);
     }
 }
 
@@ -49,10 +59,38 @@ int main(int argc, char *argv[]) {
     noecho();
     keypad(stdscr, TRUE);
 
-    do {
-        showlist(argc-1, argv+1);
+    int selected = 0;
+    argc--;
+    argv++;
+    showlist(argc, argv, selected);
+
+
+    int c;
+    while ((c = getch()) != ERR){
+        if (c == KEY_DOWN) {
+            selected++;
+            if (selected >= argc)
+                selected -= argc;
+        } else if (c == KEY_UP) {
+            selected--;
+            if (selected < 0)
+                selected += argc;
+        } else if (c == KEY_RIGHT) {
+            int height = getmaxy(stdscr);
+            selected += height;
+            if (selected >= argc)
+                selected = argc-1;
+        } else if (c == KEY_LEFT) {
+            int height = getmaxy(stdscr);
+            selected -= height;
+            if (selected < 0)
+                selected = 0;
+        }
+
+        showlist(argc, argv, selected);
+
         refresh();
-    } while (getch() == KEY_RESIZE);
+    }
 
     endwin();
 }
