@@ -1,6 +1,7 @@
 #include <string.h>
 #include <curses.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
@@ -15,7 +16,7 @@ int countcols(int count) {
     return count / getmaxy(stdscr) + 1;
 }
 
-void showlist(int count, char *list[], int selected) {
+void showlist(int count, char *list[], int curline, bool selected[]) {
     int width, height;
     getmaxyx(stdscr, height, width);
 
@@ -43,54 +44,78 @@ void showlist(int count, char *list[], int selected) {
         int curcol = i / height;
         int col = sum(maxwidth, curcol);
 
-        if (i == selected)
+        if (i == curline)
             attron(A_UNDERLINE);
+
+        if (selected[i])
+            attron(A_STANDOUT);
 
         mvprintw(row, col, "%s", list[i]);
 
-        if (i == selected)
+        if (i == curline)
             attroff(A_UNDERLINE);
+
+        if (selected[i])
+            attroff(A_STANDOUT);
     }
 }
 
 int main(int argc, char *argv[]) {
     initscr();
-    cbreak();
+    raw();
     noecho();
     keypad(stdscr, TRUE);
+    set_escdelay(0);
+    curs_set(0);
 
-    int selected = 0;
     argc--;
     argv++;
-    showlist(argc, argv, selected);
 
+    int curline = 0;
+    bool selected[argc];
+    memset(selected, false, sizeof selected);
+
+    showlist(argc, argv, curline, selected);
 
     int c;
     while ((c = getch()) != ERR){
-        if (c == KEY_DOWN) {
-            selected++;
-            if (selected >= argc)
-                selected -= argc;
+        if (c == 0x1B) { // esc
+            break;
+        } else if (c == KEY_DOWN) {
+            curline++;
+            if (curline >= argc)
+                curline -= argc;
         } else if (c == KEY_UP) {
-            selected--;
-            if (selected < 0)
-                selected += argc;
+            curline--;
+            if (curline < 0)
+                curline += argc;
         } else if (c == KEY_RIGHT) {
             int height = getmaxy(stdscr);
-            selected += height;
-            if (selected >= argc)
-                selected = argc-1;
+            curline += height;
+            if (curline >= argc)
+                curline = argc-1;
         } else if (c == KEY_LEFT) {
             int height = getmaxy(stdscr);
-            selected -= height;
-            if (selected < 0)
-                selected = 0;
+            curline -= height;
+            if (curline < 0)
+                curline = 0;
+        } else if (c == ' ') {
+            selected[curline] = !selected[curline];
+        } else if (c == '\n') {
+            break;
         }
 
-        showlist(argc, argv, selected);
+        showlist(argc, argv, curline, selected);
 
         refresh();
     }
 
     endwin();
+
+    if (c == '\n') {
+        for (int i=0; i<argc; ++i)
+            if (selected[i])
+                printf("%s ", argv[i]);
+        printf("\n");
+    }
 }
