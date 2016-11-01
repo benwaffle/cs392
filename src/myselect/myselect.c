@@ -101,6 +101,7 @@ int main(int argc, char *argv[]) {
                 curline = 0;
         } else if (c == ' ') {
             selected[curline] = !selected[curline];
+            ungetch(KEY_DOWN); // move down one
         } else if (c == '\n') {
             break;
         }
