@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE // S_ISVTX
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -5,6 +6,7 @@
 #include <unistd.h>
 #include <curses.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
@@ -88,8 +90,6 @@ lscolor **parsecolors() {
     return colors;
 }
 
-
-
 int sum(int arr[], int size) {
     int s = 0;
     for (int i=0; i<size; ++i)
@@ -135,12 +135,34 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
         if (selected[i])
             attron(A_STANDOUT);
 
+        bool isfile = true;
+        struct stat sb;
+        if (stat(list[i], &sb) < 0)
+            isfile = false;
+
         // color
         int len = strlen(list[i]);
         for (lscolor **c = colors; *c; ++c) {
             char *rule = (*c)->type;
             int extlen = strlen(rule);
-            if (rule[0] == '*' && strcmp(list[i] + (len - extlen) + 1, rule + 1) == 0) {
+            if (
+                // check *.ext
+                (rule[0] == '*' && strcmp(list[i] + (len - extlen) + 1, rule + 1) == 0) ||
+                // directories
+                (isfile && strcmp(rule, "di") == 0 && S_ISDIR(sb.st_mode)) ||
+                // symlink
+                (isfile && strcmp(rule, "ln") == 0 && S_ISLNK(sb.st_mode)) ||
+                // pipe
+                (isfile && strcmp(rule, "pi") == 0 && S_ISFIFO(sb.st_mode)) ||
+                // socket
+                (isfile && strcmp(rule, "so") == 0 && S_ISSOCK(sb.st_mode)) ||
+                // block device
+                (isfile && strcmp(rule, "bd") == 0 && S_ISBLK(sb.st_mode)) ||
+                // character device driver
+                (isfile && strcmp(rule, "cd") == 0 && S_ISCHR(sb.st_mode)) ||
+                // sticky
+                (isfile && strcmp(rule, "st") == 0 && (sb.st_mode & S_ISVTX))
+            ) {
                 attron((*c)->attrs);
                 color_set((*c)->color, NULL);
                 break;
