@@ -1,11 +1,53 @@
-#include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <curses.h>
 #include <assert.h>
-#include <stdbool.h>
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
+
+typedef struct {
+    char *type;
+    char *color;
+} lscolor;
+
+lscolor **parsecolors() {
+    char *env = getenv("LS_COLORS");
+    if (!env)
+        return NULL;
+
+    env = strdup(env); // because strtok modifies it
+
+    // count ':' chars
+    int count = 0;
+    for (int i = 0; env[i] != '\0'; ++i)
+        if (env[i] == ':')
+            ++count;
+
+    ++count; // a:b -> 1 ':', 2 elems
+
+    lscolor **colors = calloc(count + 1, sizeof *colors);
+
+    int i=0;
+    char *splitrules; // saveptr for strtok
+    char *_rule = strtok_r(env, ":", &splitrules); // split by :
+    do {
+        char *splitcur;
+        char *rule = strdup(_rule);
+        char *type = strtok_r(rule, "=", &splitcur); // split by =
+        char *color = strtok_r(NULL, "=", &splitcur);
+        colors[i] = malloc(sizeof(lscolor));
+        colors[i]->type = type;
+        colors[i]->color = color;
+        i++;
+    } while ((_rule = strtok_r(NULL, ":", &splitrules)) != NULL);
+
+    free(env);
+
+    return colors;
+}
 
 int sum(int arr[], int size) {
     int s = 0;
@@ -18,7 +60,7 @@ int countcols(int count) {
     return count / getmaxy(stdscr) + 1;
 }
 
-void showlist(int count, char *list[], int curline, bool selected[]) {
+void showlist(int count, char *list[], int curline, bool selected[], lscolor **colors) {
     int width, height;
     getmaxyx(stdscr, height, width);
 
@@ -81,7 +123,9 @@ int main(int argc, char *argv[]) {
     bool selected[argc];
     memset(selected, false, sizeof selected);
 
-    showlist(argc, argv, curline, selected);
+    lscolor **colors = parsecolors();
+
+    showlist(argc, argv, curline, selected, colors);
 
     int c;
     while ((c = getch()) != ERR){
@@ -113,12 +157,20 @@ int main(int argc, char *argv[]) {
             break;
         }
 
-        showlist(argc, argv, curline, selected);
+        showlist(argc, argv, curline, selected, colors);
 
         refresh();
     }
 
     endwin();
+
+    if (colors) {
+        for (lscolor **c = colors; *c; ++c) {
+            free((*c)->type); // only free type because color is part of the same string
+            free(*c);
+        }
+        free(colors);
+    }
 
     // restore stdout
     dup2(out, 1);
