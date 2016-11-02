@@ -155,6 +155,7 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
 }
 
 int main(int argc, char *argv[]) {
+
     int out = 1;
     if (!isatty(1)) {
         // save stdout for subshells
