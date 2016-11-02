@@ -140,7 +140,7 @@ $(SOCKET_BIN):
 $(SOCKETTALK_BIN): $(MY_LIB) $(LIST_LIB)
 $(MINISHELL_BIN): $(MY_LIB)
 $(MALLOC_BIN):
-$(MYSELECT_BIN): LDLIBS = -lcurses
+$(MYSELECT_BIN): LDFLAGS += $(shell pkg-config --libs ncurses)
 
 # build archives
 %.a:
