@@ -158,7 +158,7 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
                 // block device
                 (isfile && strcmp(rule, "bd") == 0 && S_ISBLK(sb.st_mode)) ||
                 // character device driver
-                (isfile && strcmp(rule, "cd") == 0 && S_ISCHR(sb.st_mode)) ||
+                (isfile && strcmp(rule, "cd") == 0 && S_ISCHR(sb.st_mode)) || 
                 // executable file
                 (isfile && strcmp(rule, "ex") == 0 &&
                     (sb.st_mode & S_IXUSR || // user exec
