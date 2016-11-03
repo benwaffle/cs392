@@ -52,11 +52,11 @@ lscolor **parsecolors() {
         colors[i]->attrs = 0;
         char *attrs = strtok_r(NULL, "=", &splitcur);
 
-        short f = 0, b = 0; // foreground and background colors
+        short f = -1, b = -1; // foreground and background colors
         char *color = strtok_r(attrs, ";", &splitcolors); // split by ;
         do {
             int attr = atoi(color);
-                 if (attr ==  0) f = 0, b = 0;
+                 if (attr ==  0) f = -1, b = -1;
             else if (attr ==  1) colors[i]->attrs |= A_BOLD;
             else if (attr ==  4) colors[i]->attrs |= A_UNDERLINE;
             else if (attr ==  5) colors[i]->attrs |= A_BLINK;
@@ -187,6 +187,7 @@ int main(int argc, char *argv[]) {
 
     initscr();
     start_color();
+    use_default_colors();
     raw();
     noecho();
     keypad(stdscr, TRUE);
