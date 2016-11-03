@@ -7,7 +7,7 @@ if [[ $# != 1 ]]; then
     exit
 fi
 
-for p in $(echo $PATH | tr ':' ' '); do
+for p in $(echo $PATH | tr ':' '\n' | uniq); do
     if [[ -x "$p/$prog" && ! -d "$p/$prog" ]]; then
         echo $p/$prog
     fi
