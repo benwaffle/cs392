@@ -1,4 +1,3 @@
-#define _DEFAULT_SOURCE // S_ISVTX
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
@@ -159,9 +158,7 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
                 // block device
                 (isfile && strcmp(rule, "bd") == 0 && S_ISBLK(sb.st_mode)) ||
                 // character device driver
-                (isfile && strcmp(rule, "cd") == 0 && S_ISCHR(sb.st_mode)) ||
-                // sticky
-                (isfile && strcmp(rule, "st") == 0 && (sb.st_mode & S_ISVTX))
+                (isfile && strcmp(rule, "cd") == 0 && S_ISCHR(sb.st_mode))
             ) {
                 attron((*c)->attrs);
                 color_set((*c)->color, NULL);
