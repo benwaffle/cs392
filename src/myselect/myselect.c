@@ -172,7 +172,7 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
         mvprintw(row, col, "%s", list[i]);
 
         attrset(0);
-        color_set(COLOR_PAIR(0), NULL);
+        color_set(0, NULL);
     }
 }
 
