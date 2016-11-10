@@ -6,7 +6,7 @@
  */
 int my_strncmp(char *a, char *b, int n)
 {
-    if (a == NULL && b == NULL)
+    if ((a == NULL && b == NULL) || n < 1)
         return 0;
 
     if (a == NULL)

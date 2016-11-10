@@ -6,13 +6,15 @@
  */
 char *my_strncpy(char *dst, char *src, int n)
 {
+    if (src == NULL || dst == NULL)
+        return dst;
+
     int i;
 
     for (i = 0; src[i] != '\0' && n > 0; ++i, --n)
         dst[i] = src[i];
 
-    if (n > 0)
-        dst[i] = '\0';
+    dst[i] = '\0';
 
     return dst;
 }
