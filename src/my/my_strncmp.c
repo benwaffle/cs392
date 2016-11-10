@@ -6,7 +6,7 @@
  */
 int my_strncmp(char *a, char *b, int n)
 {
-    if ((a == NULL && b == NULL) || n < 1)
+    if (a == NULL && b == NULL)
         return 0;
 
     if (a == NULL)
@@ -14,6 +14,9 @@ int my_strncmp(char *a, char *b, int n)
 
     if (b == NULL)
         return 1;
+
+    if (n < 0)
+        return 0;
 
     while (n > 0 && *a == *b) {
         ++a;
