@@ -78,6 +78,8 @@ MALLOC_BIN := src/malloc/malloc
 
 MYSELECT_BIN := src/myselect/myselect
 
+PTHREAD_BIN := src/pthread/lab6
+
 # tests
 
 TESTS := \
@@ -98,7 +100,8 @@ all: \
 	$(SOCKETTALK_BIN) \
 	$(MINISHELL_BIN) \
 	$(MALLOC_BIN) \
-	$(MYSELECT_BIN)
+	$(MYSELECT_BIN) \
+	$(PTHREAD_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -141,6 +144,7 @@ $(SOCKETTALK_BIN): $(MY_LIB) $(LIST_LIB)
 $(MINISHELL_BIN): $(MY_LIB)
 $(MALLOC_BIN):
 $(MYSELECT_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
+$(PTHREAD_BIN): LDFLAGS += -pthread
 
 # build archives
 %.a:
