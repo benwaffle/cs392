@@ -29,7 +29,7 @@ void my_num_base(int num_int, char *chars)
 
     // unary
     if (base == 1) {
-        for (int i=0; i<num; ++i)
+        for (int i = 0; i < num; ++i)
             my_char(chars[0]);
         return;
     }
@@ -40,7 +40,8 @@ void my_num_base(int num_int, char *chars)
         return;
     }
 
-    char str[32]; // unary is handled above, so MAX_INT in base 2 is 31 bits wide
+    // unary is handled above, so MAX_INT in base 2 is 31 bits wide
+    char str[32];
     int i = 0;
     while (num > 0) {
         str[i++] = chars[num % base];

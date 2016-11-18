@@ -1,13 +1,13 @@
+#include <assert.h>
+#include <curses.h>
+#include <fcntl.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <curses.h>
-#include <assert.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 typedef struct {
     char *type; // rule to match
@@ -22,7 +22,8 @@ typedef struct {
  * e.g.
  * "*.mp4=40;34:*.jpg=04;32"
  */
-lscolor **parsecolors() {
+lscolor **parsecolors()
+{
     char *env = getenv("LS_COLORS");
     if (!env)
         return NULL;
@@ -39,7 +40,7 @@ lscolor **parsecolors() {
 
     lscolor **colors = calloc(count + 1, sizeof *colors);
 
-    int i=0;
+    int i = 0;
     char *splitrules; // saveptr for strtok
     char *_rule = strtok_r(env, ":", &splitrules); // split by :
     do {
@@ -47,7 +48,7 @@ lscolor **parsecolors() {
         char *rule = strdup(_rule);
         colors[i] = calloc(1, sizeof(lscolor));
         colors[i]->type = strtok_r(rule, "=", &splitcur); // split by =
-        colors[i]->color = i+1; // the color number can't be 0
+        colors[i]->color = i + 1; // the color number can't be 0
         colors[i]->attrs = 0;
         char *attrs = strtok_r(NULL, "=", &splitcur);
 
@@ -55,6 +56,7 @@ lscolor **parsecolors() {
         char *color = strtok_r(attrs, ";", &splitcolors); // split by ;
         do {
             int attr = atoi(color);
+            // clang-format off
                  if (attr ==  0) f = -1, b = -1;
             else if (attr ==  1) colors[i]->attrs |= A_BOLD;
             else if (attr ==  4) colors[i]->attrs |= A_UNDERLINE;
@@ -77,6 +79,7 @@ lscolor **parsecolors() {
             else if (attr == 45) b = COLOR_MAGENTA;
             else if (attr == 46) b = COLOR_CYAN;
             else if (attr == 47) b = COLOR_WHITE;
+            // clang-format on
         } while ((color = strtok_r(NULL, ";", &splitcolors)) != NULL);
 
         init_pair(colors[i]->color, f, b);
@@ -89,18 +92,19 @@ lscolor **parsecolors() {
     return colors;
 }
 
-int sum(int arr[], int size) {
+int sum(int arr[], int size)
+{
     int s = 0;
-    for (int i=0; i<size; ++i)
+    for (int i = 0; i < size; ++i)
         s += arr[i];
     return s;
 }
 
-int countcols(int count) {
-    return count / getmaxy(stdscr) + 1;
-}
+int countcols(int count) { return count / getmaxy(stdscr) + 1; }
 
-void showlist(int count, char *list[], int curline, bool selected[], lscolor **colors) {
+void showlist(int count, char *list[], int curline, bool selected[],
+              lscolor **colors)
+{
     int width, height;
     getmaxyx(stdscr, height, width);
 
@@ -111,19 +115,19 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
     int maxwidth[cols];
     memset(maxwidth, 0, sizeof maxwidth);
 
-    for (int i=0; i<count; ++i) {
+    for (int i = 0; i < count; ++i) {
         int col = i / height;
         maxwidth[col] = MAX(maxwidth[col], strlen(list[i]) + 1);
     }
-    maxwidth[cols-1]--;
+    maxwidth[cols - 1]--;
 
     if (sum(maxwidth, cols) > width) {
         char msg[] = "Please enlarge the window";
-        mvprintw(height/2, width/2 - sizeof(msg)/2, "%s", msg);
+        mvprintw(height / 2, width / 2 - sizeof(msg) / 2, "%s", msg);
         return;
     }
 
-    for (int i=0; i<count; ++i) {
+    for (int i = 0; i < count; ++i) {
         int row = i % height;
         int curcol = i / height;
         int col = sum(maxwidth, curcol);
@@ -146,7 +150,8 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
             int extlen = strlen(rule);
             if (
                 // check *.ext
-                (rule[0] == '*' && strcmp(list[i] + (len - extlen) + 1, rule + 1) == 0) ||
+                (rule[0] == '*' &&
+                 strcmp(list[i] + (len - extlen) + 1, rule + 1) == 0) ||
                 // directories
                 (isfile && strcmp(rule, "di") == 0 && S_ISDIR(sb.st_mode)) ||
                 // symlink
@@ -161,10 +166,10 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
                 (isfile && strcmp(rule, "cd") == 0 && S_ISCHR(sb.st_mode)) ||
                 // executable file
                 (isfile && strcmp(rule, "ex") == 0 &&
-                    (sb.st_mode & S_IXUSR || // user exec
-                     sb.st_mode & S_IXGRP || // group exec
-                     sb.st_mode & S_IXOTH))  // other exec
-            ) {
+                 (sb.st_mode & S_IXUSR || // user exec
+                  sb.st_mode & S_IXGRP || // group exec
+                  sb.st_mode & S_IXOTH)) // other exec
+                ) {
                 attron((*c)->attrs);
                 color_set((*c)->color, NULL);
                 break;
@@ -178,7 +183,8 @@ void showlist(int count, char *list[], int curline, bool selected[], lscolor **c
     }
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int out = 1;
     if (!isatty(1)) {
         // save stdout for subshells
@@ -208,7 +214,7 @@ int main(int argc, char *argv[]) {
     showlist(argc, argv, curline, selected, colors);
 
     int c;
-    while ((c = getch()) != ERR){
+    while ((c = getch()) != ERR) {
         if (c == 0x1B) { // esc
             break;
         } else if (c == KEY_DOWN) {
@@ -223,7 +229,7 @@ int main(int argc, char *argv[]) {
             int height = getmaxy(stdscr);
             curline += height;
             if (curline >= argc)
-                curline = argc-1;
+                curline = argc - 1;
         } else if (c == KEY_LEFT) {
             int height = getmaxy(stdscr);
             curline -= height;
@@ -246,7 +252,8 @@ int main(int argc, char *argv[]) {
 
     if (colors) {
         for (lscolor **c = colors; *c; ++c) {
-            free((*c)->type); // only free type because color is part of the same string
+            // only free type because color is part of the same string
+            free((*c)->type);
             free(*c);
         }
         free(colors);
@@ -256,7 +263,7 @@ int main(int argc, char *argv[]) {
     dup2(out, 1);
 
     if (c == '\n') {
-        for (int i=0; i<argc; ++i)
+        for (int i = 0; i < argc; ++i)
             if (selected[i])
                 printf("%s ", argv[i]);
         printf("\n");

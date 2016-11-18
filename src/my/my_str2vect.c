@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include "my.h"
+#include <stdio.h>
 
 // is whitespace
 static int isws(char c)
@@ -13,14 +13,15 @@ static int isws(char c)
  * Splits apart the input string x at each space character
  * Returns the newly allocated array of strings
  * Any number of ' ','\t', and '\n's can separate words.
- * I.e. "hello \t\t\n class,\nhow are you?" -> {"hello", "class,", "how", "are","you?", NULL}
+ * I.e. "hello \t\t\n class,\nhow are you?" -> {"hello", "class,", "how",
+ * "are","you?", NULL}
  */
 char **my_str2vect(char *str)
 {
     int len = 0;
     for (int i = 0; str[i] != '\0'; ++i) {
         // count the last letter of each word
-        if (!isws(str[i]) && isws(str[i+1])) {
+        if (!isws(str[i]) && isws(str[i + 1])) {
             ++len;
         }
     }

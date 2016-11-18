@@ -1,18 +1,15 @@
-#include <stdio.h> 
-#include <stdlib.h>
-#include <stdbool.h>
-#include <unistd.h>
 #include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 pid_t child;
 bool child_killed = false;
 
 // parent
-void send_sigusr1()
-{
-    kill(child, SIGUSR1);
-}
+void send_sigusr1() { kill(child, SIGUSR1); }
 
 void handle_sigint()
 {
@@ -24,10 +21,7 @@ void handle_sigint()
     }
 }
 
-void handle_sigchld()
-{
-    child_killed = true;
-}
+void handle_sigchld() { child_killed = true; }
 
 void handle_timeout()
 {
@@ -36,10 +30,7 @@ void handle_timeout()
 }
 
 // child
-void handle_sigusr1()
-{
-    puts("Signal Received!");
-}
+void handle_sigusr1() { puts("Signal Received!"); }
 
 void handle_sigusr2()
 {
@@ -61,8 +52,8 @@ int main()
         while (true)
             pause();
     } else { // child
-        signal(SIGTSTP, SIG_IGN);        
-        signal(SIGINT, SIG_IGN);        
+        signal(SIGTSTP, SIG_IGN);
+        signal(SIGINT, SIG_IGN);
         signal(SIGUSR1, handle_sigusr1);
         signal(SIGUSR2, handle_sigusr2);
         while (true)

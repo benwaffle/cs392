@@ -1,11 +1,12 @@
 #include "list.h"
 
-void* remove_node(struct s_node** node)
+void *remove_node(struct s_node **node)
 {
     if (node == NULL || *node == NULL)
         return NULL;
 
-    struct s_node *mynode = *node; // create a copy of the node so we don't overwrite it
+    // create a copy of the node so we don't overwrite it
+    struct s_node *mynode = *node;
 
     if (mynode->prev != NULL)
         mynode->prev->next = mynode->next;

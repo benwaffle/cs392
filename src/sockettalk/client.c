@@ -1,14 +1,14 @@
 #include "my.h"
-#include <stdio.h>
 #include <errno.h>
-#include <poll.h> 
-#include <signal.h>
-#include <sys/socket.h>
 #include <netdb.h>
+#include <poll.h>
+#include <signal.h>
+#include <stdio.h>
+#include <sys/socket.h>
 
 char *read_stdin()
 {
-    char *buf = calloc(1, 1024+1);
+    char *buf = calloc(1, 1024 + 1);
     ssize_t s = read(0, buf, 1024);
     if (s == 0) { // EOF
         free(buf);
@@ -19,8 +19,8 @@ char *read_stdin()
         return NULL;
     }
 
-    if (buf[s-1] == '\n')
-        buf[s-1] = '\0';
+    if (buf[s - 1] == '\n')
+        buf[s - 1] = '\0';
     buf[s] = '\0';
 
     return buf;
@@ -28,7 +28,7 @@ char *read_stdin()
 
 char *read_socket(int fd)
 {
-    char *buf = calloc(1, 1024+1);
+    char *buf = calloc(1, 1024 + 1);
     ssize_t s = recv(fd, buf, 1024, 0);
     if (s == 0) {
         my_str("Server disconnected\n");
@@ -43,13 +43,9 @@ char *read_socket(int fd)
     return buf;
 }
 
-
 int running;
 
-void stop_client()
-{
-    running = 0;
-}
+void stop_client() { running = 0; }
 
 int main(int argc, char *argv[])
 {
@@ -72,14 +68,13 @@ int main(int argc, char *argv[])
     struct addrinfo *results;
     int err = getaddrinfo(host, NULL, &hints, &results);
     if (err != 0) {
-        my_str((char*)gai_strerror(err));
+        my_str((char *)gai_strerror(err));
         my_char('\n');
         return 1;
     }
 
     struct sockaddr *addr = results[0].ai_addr;
     socklen_t addrlen = results[0].ai_addrlen;
-
 
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
@@ -112,12 +107,14 @@ int main(int argc, char *argv[])
         }
         free(msg);
 
-        my_str("That username is already in use. Please try again.\nUsername: ");
+        my_str("That username is already in use. Please try again.\n"
+               "Username: ");
         username = read_stdin();
 
         send(sock, username, my_strlen(username), 0);
     }
 
+    // clang-format off
     struct pollfd fds[2] = {
         {
             .fd = 0, // stdin
@@ -130,6 +127,7 @@ int main(int argc, char *argv[])
             .revents = 0
         }
     };
+    // clang-format on
 
     signal(SIGINT, stop_client);
 

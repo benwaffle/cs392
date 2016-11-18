@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <limits.h>
-#include <sys/wait.h>
-#include <errno.h>
-#include <signal.h>
 #include "my.h"
+#include <errno.h>
+#include <limits.h>
+#include <signal.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 // colors
 #define KRST "\x1B[0m"
@@ -28,7 +28,7 @@ char *read_str(int fd)
     }
 
     while ((ret = read(0, msg + append_off, oldsize)) == oldsize) {
-        if (msg[size-1] == '\n')
+        if (msg[size - 1] == '\n')
             break;
         oldsize = append_off = size;
         msg = realloc(msg, size *= 2);
@@ -50,16 +50,20 @@ char *read_str(int fd)
 
 void sigint_handler(int sig) {}
 
-int main() {
+int main()
+{
     signal(SIGINT, sigint_handler);
     sigset_t blocked;
     sigemptyset(&blocked);
     // we use sigaction for SA_RESTART
-    sigaction(SIGINT, &(struct sigaction) {
-        .sa_handler = sigint_handler, // can't use SIG_IGN, it turns this off
-        .sa_mask = blocked,
-        .sa_flags = SA_RESTART // restart interrupted signals
-    }, NULL);
+    sigaction(SIGINT,
+              &(struct sigaction){
+                  // can't use SIG_IGN, it turns this off
+                  .sa_handler = sigint_handler,
+                  .sa_mask = blocked,
+                  .sa_flags = SA_RESTART // restart interrupted signals
+              },
+              NULL);
 
     while (true) {
         my_str(KBLU);
@@ -86,12 +90,10 @@ int main() {
             } else if (my_strcmp(parts[0], "exit") == 0) {
                 break;
             } else if (my_strcmp(parts[0], "help") == 0) {
-                my_str(
-                    "Minishell Commands:\n"
-                    "\tcd <dir> - change directory\n"
-                    "\texit - exit the shell\n"
-                    "\thelp - show this help message\n"
-                );
+                my_str("Minishell Commands:\n"
+                       "\tcd <dir> - change directory\n"
+                       "\texit - exit the shell\n"
+                       "\thelp - show this help message\n");
             } else { // run command
                 pid_t child;
                 if ((child = fork()) < 0) {

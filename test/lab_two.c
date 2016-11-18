@@ -1,7 +1,7 @@
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
 
 int main()
 {
@@ -11,7 +11,8 @@ int main()
         return 1;
     }
 
-    int dec = open("solution.txt", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    int dec = open("solution.txt", O_WRONLY | O_CREAT,
+                   S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
     int key = 5;
 

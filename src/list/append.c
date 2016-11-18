@@ -1,6 +1,6 @@
 #include "list.h"
 
-void append(struct s_node* node, struct s_node** head)
+void append(struct s_node *node, struct s_node **head)
 {
     if (head == NULL) // invalid
         return;

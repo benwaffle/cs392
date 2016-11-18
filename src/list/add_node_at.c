@@ -1,6 +1,6 @@
 #include "list.h"
 
-void add_node_at(struct s_node* node, struct s_node** head, int n)
+void add_node_at(struct s_node *node, struct s_node **head, int n)
 {
     if (head == NULL || n < 0) // invalid
         return;

@@ -1,26 +1,31 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <signal.h>
-#include <sys/types.h>
 #include "my.h"
+#include <signal.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 // test code that prints to stdout
-#define PRTEST(code) { \
-    my_str(#code); \
-    my_str(": "); \
-    code; \
-    my_char('\n'); \
-}
+#define PRTEST(code)                                                           \
+    {                                                                          \
+        my_str(#code);                                                         \
+        my_str(": ");                                                          \
+        code;                                                                  \
+        my_char('\n');                                                         \
+    }
 
 // just print the code
-#define PRINT(code) { \
-    code; \
-    my_str(#code); \
-    my_str(";\n"); \
-}
+#define PRINT(code)                                                            \
+    {                                                                          \
+        code;                                                                  \
+        my_str(#code);                                                         \
+        my_str(";\n");                                                         \
+    }
 
-#define assert(p) ((p) ? my_str("\x1B[32m▸\x1B[0m ") : assert_failed(#p, __FILE__, __LINE__))
-void assert_failed(char *p, char *file, int line) {
+#define assert(p)                                                              \
+    ((p) ? my_str("\x1B[32m▸\x1B[0m ") : assert_failed(#p, __FILE__, __LINE__))
+
+void assert_failed(char *p, char *file, int line)
+{
     my_str(file);
     my_char(':');
     my_int(line);
@@ -115,37 +120,18 @@ int main()
 
     my_char('\n');
 
-    PRTEST(
-        char x[] = "stevens";
-        assert(my_revstr(x) == 7);
-        my_str(x)
-    );
+    PRTEST(char x[] = "stevens"; assert(my_revstr(x) == 7); my_str(x));
 
-    PRTEST(
-        char x[] = "a";
-        assert(my_revstr(x) == 1);
-        my_str(x)
-    );
+    PRTEST(char x[] = "a"; assert(my_revstr(x) == 1); my_str(x));
 
-    PRTEST(
-        char x[] = "ab";
-        assert(my_revstr(x) == 2);
-        my_str(x)
-    );
+    PRTEST(char x[] = "ab"; assert(my_revstr(x) == 2); my_str(x));
 
     PRINT(assert(my_revstr(NULL) == -1));
 
-    PRTEST(
-        char y[] = "";
-        assert(my_revstr(y) == 0);
-        my_str(y)
-    );
+    PRTEST(char y[] = ""; assert(my_revstr(y) == 0); my_str(y));
 
-    PRTEST(
-        char y[] = "abcdefghijklmnopqrstuvwxyz";
-        assert(my_revstr(y) == 26);
-        my_str(y)
-    );
+    PRTEST(char y[] = "abcdefghijklmnopqrstuvwxyz"; assert(my_revstr(y) == 26);
+           my_str(y));
 
     my_char('\n');
 
@@ -219,7 +205,8 @@ int main()
     PRINT({
         char x[] = "hello";
         assert(my_strcpy(x, NULL) == x);
-        assert(my_strcmp(x, "hello") == 0); // TODO: should this be "" or "hello"
+        assert(my_strcmp(x, "hello") ==
+               0); // TODO: should this be "" or "hello"
     });
 
     PRINT({
@@ -243,20 +230,18 @@ int main()
     my_char('\n');
 
     PRINT({
-        char x[10+1] = "hello";
+        char x[10 + 1] = "hello";
         assert(my_strcat(x, "world") == x);
         assert(my_strcmp(x, "helloworld") == 0);
     });
 
     PRINT({
-        char x[5+1] = "hello";
+        char x[5 + 1] = "hello";
         assert(my_strcat(x, NULL) == x);
         assert(my_strcmp(x, "hello") == 0);
     });
 
-    PRINT({
-        assert(my_strcat(NULL, "world") == NULL);
-    });
+    PRINT({ assert(my_strcat(NULL, "world") == NULL); });
 
     PRINT({
         char *x = "g eazy";
@@ -340,7 +325,9 @@ int main()
     PRINT(assert(my_strcmp(my_vect2str(my_str2vect("a b")), "a b") == 0));
     PRINT(assert(my_strcmp(my_vect2str(my_str2vect(" c d")), "c d") == 0));
     PRINT(assert(my_strcmp(my_vect2str(my_str2vect(" e  f  ")), "e f") == 0));
-    PRINT(assert(my_strcmp(my_vect2str(my_str2vect("hello \t\t\n class,\nhow are you?")), "hello class, how are you?") == 0));
+    PRINT(assert(
+        my_strcmp(my_vect2str(my_str2vect("hello \t\t\n class,\nhow are you?")),
+                  "hello class, how are you?") == 0));
 
     my_str("\n--------- done ---------\n");
 }

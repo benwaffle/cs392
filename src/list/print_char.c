@@ -1,6 +1,6 @@
 #include "list.h"
 
-void print_char(struct s_node* node)
+void print_char(struct s_node *node)
 {
 
     if (node == NULL)
@@ -8,5 +8,5 @@ void print_char(struct s_node* node)
     else if (node->elem == NULL)
         my_str("(null elem)");
     else
-        my_char(*(char*)node->elem);
+        my_char(*(char *)node->elem);
 }

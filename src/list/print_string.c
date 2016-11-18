@@ -1,6 +1,6 @@
 #include "list.h"
 
-void print_string(struct s_node* node)
+void print_string(struct s_node *node)
 {
     if (node == NULL)
         my_str("NULL");

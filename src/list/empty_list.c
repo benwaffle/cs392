@@ -1,6 +1,6 @@
 #include "list.h"
 
-void empty_list(struct s_node** head)
+void empty_list(struct s_node **head)
 {
     if (head == NULL)
         return;

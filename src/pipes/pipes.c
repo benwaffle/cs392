@@ -1,13 +1,13 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/types.h>
 #include "my.h"
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
-#define CHECK(x) \
-    if ((x) < 0) { \
-        perror(#x); \
-        return 1; \
+#define CHECK(x)                                                               \
+    if ((x) < 0) {                                                             \
+        perror(#x);                                                            \
+        return 1;                                                              \
     }
 
 int main(int argc, char *argv[])
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         CHECK(close(pipe1[0]))
         int wfd = pipe1[1];
 
-        char *msg = my_vect2str(argv+1);
+        char *msg = my_vect2str(argv + 1);
         printf("Parent: %s\n", msg);
         CHECK(write(wfd, msg, my_strlen(msg)))
         free(msg);

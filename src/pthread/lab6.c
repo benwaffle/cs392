@@ -1,17 +1,17 @@
 // Compute the sum of a file full of binary 16-bit integer data,
 // parallel version.
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 struct mmap_region {
@@ -27,13 +27,15 @@ struct thread_data {
 };
 
 size_t get_file_size(const char *filename);
-void map_file_region(const char *filename, size_t size, struct mmap_region *region);
+void map_file_region(const char *filename, size_t size,
+                     struct mmap_region *region);
 void unmap_file_region(struct mmap_region *region);
 
-void* calc_sum(void *_data) {
+void *calc_sum(void *_data)
+{
     struct thread_data *data = _data;
-    for (int i=0; i<data->len; ++i)
-        *data->sum += data->addr[i]; 
+    for (int i = 0; i < data->len; ++i)
+        *data->sum += data->addr[i];
     return NULL;
 }
 
@@ -45,7 +47,8 @@ int main(int argc, char **argv)
     struct mmap_region region;
 
     if (argc != 2 && argc != 3) {
-        fprintf(stderr, "Usage: %s <input file> [number of threads]\n", argv[0]);
+        fprintf(stderr, "Usage: %s <input file> [number of threads]\n",
+                argv[0]);
         exit(1);
     }
 
@@ -71,20 +74,22 @@ int main(int argc, char **argv)
     struct thread_data tdata[nthreads];
     int nperthread = num_elements / nthreads;
 
-    for (int i=0; i<nthreads; ++i) {
+    for (int i = 0; i < nthreads; ++i) {
         int len = nperthread;
-        if (i == nthreads-1) {
-            len = num_elements - nperthread * (nthreads-1);
+        if (i == nthreads - 1) {
+            len = num_elements - nperthread * (nthreads - 1);
         }
+        // clang-format off
         tdata[i] = (struct thread_data) {
             .addr = data + nperthread * i,
             .len = len,
             .sum = &sums[i]
         };
+        // clang-format on
         pthread_create(&threads[i], NULL, calc_sum, &tdata[i]);
     }
 
-    for (int i=0; i<nthreads; ++i)
+    for (int i = 0; i < nthreads; ++i)
         pthread_join(threads[i], NULL);
 
     // Compute the sum
@@ -111,7 +116,8 @@ size_t get_file_size(const char *filename)
     return (size_t)file_info.st_size;
 }
 
-void map_file_region(const char *filename, size_t size, struct mmap_region *region)
+void map_file_region(const char *filename, size_t size,
+                     struct mmap_region *region)
 {
     region->size = size;
 
@@ -123,7 +129,8 @@ void map_file_region(const char *filename, size_t size, struct mmap_region *regi
     }
 
     // Map the file into memory.
-    region->addr = mmap(NULL, (size_t)size, PROT_READ, MAP_PRIVATE, region->fd, (off_t)0);
+    region->addr =
+        mmap(NULL, (size_t)size, PROT_READ, MAP_PRIVATE, region->fd, (off_t)0);
     if (region->addr == MAP_FAILED) {
         fprintf(stderr, "Could not map %s: %s\n", filename, strerror(errno));
         exit(1);
@@ -135,5 +142,3 @@ void unmap_file_region(struct mmap_region *region)
     munmap(region->addr, region->size);
     close(region->fd);
 }
-
-

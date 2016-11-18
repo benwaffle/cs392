@@ -1,13 +1,17 @@
 #include "list.h"
-#include <stdio.h>
-#include <unistd.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #define UNUSED(x) ((x) = (x))
 
-#define assert(p) ((p) ? my_str("\x1B[32m✓\x1B[0m " #p "\n") : assert_failed(#p, __FILE__, __LINE__))
-void assert_failed(char *p, char *file, int line) {
+#define assert(p)                                                              \
+    ((p) ? my_str("\x1B[32m✓\x1B[0m " #p "\n")                                 \
+         : assert_failed(#p, __FILE__, __LINE__))
+
+void assert_failed(char *p, char *file, int line)
+{
     my_str(file);
     my_char(':');
     my_int(line);
@@ -17,13 +21,15 @@ void assert_failed(char *p, char *file, int line) {
     kill(getpid(), SIGABRT); // suicide
 }
 
-void note(char *s) {
+void note(char *s)
+{
     my_str("\x1B[33m");
     my_str(s);
     my_str("\x1B[0m");
 }
 
-int *mkint(int i) {
+int *mkint(int i)
+{
     int *p = malloc(sizeof(int));
     *p = i;
     return p;
@@ -118,7 +124,7 @@ int main()
     add_elem(i2, &head);
     assert(node_at(head, -20) == head);
     note("added 1, 2\n");
-    assert(*(int*)head->elem == 2);
+    assert(*(int *)head->elem == 2);
     traverse_int(head);
     debug_int(head);
 
@@ -138,7 +144,7 @@ int main()
     head = new_node(i1, NULL, NULL);
     add_elem(i2, &head);
     note("added 1, 2\n");
-    assert(*(int*)head->elem == 2);
+    assert(*(int *)head->elem == 2);
     traverse_int(head);
     debug_int(head);
 
@@ -159,7 +165,7 @@ int main()
     add_elem(i2, &head);
     add_elem(i3, &head);
     note("added 1, 2, 3\n");
-    assert(*(int*)head->elem == 3);
+    assert(*(int *)head->elem == 3);
     traverse_int(head);
     debug_int(head);
 
@@ -189,7 +195,7 @@ int main()
     add_elem(i2, &head);
     add_elem(i3, &head);
     note("added 1, 2, 3\n");
-    assert(*(int*)head->elem == 3);
+    assert(*(int *)head->elem == 3);
     traverse_int(head);
     debug_int(head);
 
@@ -219,21 +225,26 @@ int main()
 
     my_str("\n-------\n");
 
-    note("checking that add_node_at can add before last node AND after all nodes\n");
+    note("checking that add_node_at can add before last node AND after all "
+         "nodes\n");
     head = new_node("4", NULL, NULL);
     add_elem("3", &head);
     add_elem("2", &head);
     add_elem("1", &head);
     add_elem("0", &head);
-    traverse_string(head); my_char('\n');
+    traverse_string(head);
+    my_char('\n');
     add_node_at(new_node("inserted-in-pos-3", NULL, NULL), &head, 3);
     assert(my_strcmp(elem_at(head, 3), "inserted-in-pos-3") == 0);
-    traverse_string(head); my_char('\n');
+    traverse_string(head);
+    my_char('\n');
     remove_node_at(&head, 3);
-    traverse_string(head); my_char('\n');
+    traverse_string(head);
+    my_char('\n');
     add_node_at(new_node("inserted-in-pos-4", NULL, NULL), &head, 4);
     assert(my_strcmp(elem_at(head, 4), "inserted-in-pos-4") == 0);
-    traverse_string(head); my_char('\n');
+    traverse_string(head);
+    my_char('\n');
     remove_node_at(&head, 4);
     add_node_at(new_node("tail", NULL, NULL), &head, 99);
     traverse_string(head);
@@ -291,7 +302,7 @@ int main()
     debug_char(head);
     my_char('\n');
     assert(node_at(head, 2) == node_L);
-    assert(*(char*)node_L->elem == 'l');
+    assert(*(char *)node_L->elem == 'l');
     assert(elem_at(head, 2) == node_L->elem);
     empty_list(&head);
     assert(count_s_nodes(head) == 0);

@@ -11,7 +11,7 @@ int my_strrindex(char *str, char c)
 
     int len = my_strlen(str);
 
-    for (int i = len-1; i >= 0; --i)
+    for (int i = len - 1; i >= 0; --i)
         if (str[i] == c)
             return i;
 
