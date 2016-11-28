@@ -39,27 +39,44 @@ void make_colors()
     init_pair(KWHT, COLOR_WHITE, -1);
 }
 
+typedef void (*on_output)(const char *, void *);
 
-void run_cmd(const char *cmd)
+void run_cmd(char *const *cmd, on_output fn, void *data)
 {
     int socks[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, socks);
 
     if (fork() == 0) { // child
         close(socks[0]);
+
+        dup2(socks[1], STDIN_FILENO);
         dup2(socks[1], STDOUT_FILENO);
         dup2(socks[1], STDERR_FILENO);
-        execlp(cmd, cmd, NULL);
+        if (execvp(cmd[0], cmd) < 0) {
+            if (errno == ENOENT)
+                printf("%s: no such command\n", cmd[0]);
+            else
+                perror("execvp");
+        }
+        exit(0);
     } else { // parent
         close(socks[1]);
-        char c;
-        while (read(socks[0], &c, 1) > 0) {
-            printw("%c", c);
+
+        char str[1024] = {0};
+        int r;
+        while ((r = read(socks[0], str, sizeof(str) - 1)) > 0) {
+            fn(str, data);
+        }
+
+        if (wait(NULL) < 0) {
+            printw("wait: %s\n", strerror(errno));
         }
 
         close(socks[0]);
     }
 }
+
+void print_str(const char *str, void *data) { printw("%s", str); }
 
 void process_command(char *cmd)
 {
@@ -80,6 +97,8 @@ void process_command(char *cmd)
                    "\tcd <dir> - change directory\n"
                    "\texit - exit the shell\n"
                    "\thelp - show this help message\n");
+        } else {
+            run_cmd(parts, print_str, NULL);
         }
     }
 
