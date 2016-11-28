@@ -1,15 +1,15 @@
 #include "my.h"
+#include <assert.h>
 #include <curses.h>
 #include <errno.h>
-#include <assert.h>
-#include <stdlib.h>
 #include <limits.h>
+#include <locale.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
-#include <locale.h> 
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -30,13 +30,13 @@ bool running = true;
 void make_colors()
 {
     init_pair(KRST, -1, -1);
-    init_pair(KRED, COLOR_RED, -1); 
-    init_pair(KGRN, COLOR_GREEN, -1); 
-    init_pair(KYEL, COLOR_YELLOW, -1); 
-    init_pair(KBLU, COLOR_BLUE, -1); 
-    init_pair(KMAG, COLOR_MAGENTA, -1); 
-    init_pair(KCYN, COLOR_CYAN, -1); 
-    init_pair(KWHT, COLOR_WHITE, -1); 
+    init_pair(KRED, COLOR_RED, -1);
+    init_pair(KGRN, COLOR_GREEN, -1);
+    init_pair(KYEL, COLOR_YELLOW, -1);
+    init_pair(KBLU, COLOR_BLUE, -1);
+    init_pair(KMAG, COLOR_MAGENTA, -1);
+    init_pair(KCYN, COLOR_CYAN, -1);
+    init_pair(KWHT, COLOR_WHITE, -1);
 }
 
 
@@ -64,7 +64,7 @@ void run_cmd(const char *cmd)
 void process_command(char *cmd)
 {
     char **parts = my_str2vect(cmd);
-    
+
     // TODO fix quotes
 
     if (parts[0]) {
@@ -82,7 +82,7 @@ void process_command(char *cmd)
                    "\thelp - show this help message\n");
         }
     }
-     
+
     for (char **p = parts; *p != NULL; ++p)
         free(*p);
     free(parts);
@@ -109,8 +109,9 @@ void do_input()
         int y, x;
         getyx(stdscr, y, x);
 
-        mvprintw(getmaxy(stdscr) - 1, 0, "[DEBUG] pos = %d, len = %d, buf = %s", pos, len, buf);
-        for (int i=0; i<getmaxx(stdscr); ++i)
+        mvprintw(getmaxy(stdscr) - 1, 0, "[DEBUG] pos = %d, len = %d, buf = %s",
+                 pos, len, buf);
+        for (int i = 0; i < getmaxx(stdscr); ++i)
             addch(' ');
         move(y, x);
 
@@ -118,7 +119,7 @@ void do_input()
         if (c == ERR) {
             running = false;
         } else if (c == '\n') { // enter
-            move(y+1, 0);
+            move(y + 1, 0);
             process_command(buf);
             break;
         } else if (c == KEY_BACKSPACE || c == 0x7F) { // backspace
@@ -167,7 +168,7 @@ int main()
     raw();
     noecho();
     keypad(stdscr, TRUE);
- 
+
     start_color();
     use_default_colors();
     make_colors();
