@@ -23,6 +23,8 @@
 #define KCYN 7
 #define KWHT 8
 
+#define CTRL(c) ((c)-64)
+
 bool running = true;
 
 void make_colors()
@@ -136,13 +138,13 @@ void do_input()
                 move(y, x + 1);
                 pos++;
             }
-        } else if (c == 0x1) { // ^A
+        } else if (c == CTRL('A')) { // ^A
             move(y, x - pos);
             pos = 0;
-        } else if (c == 0x5) { // ^E
+        } else if (c == CTRL('E')) { // ^E
             move(y, x + (len - pos));
             pos = len;
-        } else if (c == 0xc) { // ^L
+        } else if (c == CTRL('L')) { // ^L
             clear();
             shell_prompt();
             printw("%s", buf);
