@@ -80,6 +80,8 @@ MYSELECT_BIN := src/myselect/myselect
 
 PTHREAD_BIN := src/pthread/lab6
 
+NSMINISHELL_BIN := src/nsminishell/nsminishell
+
 # tests
 
 TESTS := \
@@ -101,7 +103,8 @@ all: \
 	$(MINISHELL_BIN) \
 	$(MALLOC_BIN) \
 	$(MYSELECT_BIN) \
-	$(PTHREAD_BIN)
+	$(PTHREAD_BIN) \
+	$(NSMINISHELL_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -145,6 +148,9 @@ $(MINISHELL_BIN): $(MY_LIB)
 $(MALLOC_BIN):
 $(MYSELECT_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 $(PTHREAD_BIN): LDFLAGS += -pthread
+
+$(NSMINISHELL_BIN): $(MY_LIB)
+$(NSMINISHELL_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 
 # build archives
 %.a:
