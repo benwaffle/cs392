@@ -150,6 +150,8 @@ void do_input()
             shell_prompt();
             printw("%s", buf);
             move(0, x);
+        } else if (c == CTRL('D')) { // ^D
+            running = false;
         } else if (c > 0x1F) { // insert char, don't print control chars
             // TODO fix text wrapping
             insch(c);
