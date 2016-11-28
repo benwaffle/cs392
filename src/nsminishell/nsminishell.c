@@ -76,7 +76,7 @@ void process_command(char *cmd)
         } else if (strcmp(parts[0], "exit") == 0) {
             running = false;
         } else if (strcmp(parts[0], "help") == 0) {
-            printw("Minishell Commands:\n"
+            printw("Not-So-Minishell Commands:\n"
                    "\tcd <dir> - change directory\n"
                    "\texit - exit the shell\n"
                    "\thelp - show this help message\n");
