@@ -14,38 +14,12 @@
 #include <unistd.h>
 #include <unistd.h>
 
+#ifndef CTRL
+#define CTRL(c) (c&037)
+#endif
+
 bool running = 0;
-
-// read an arbitrary-length string from fd
-char *read_str(int fd)
-{
-    ssize_t ret, size = 4, oldsize = 4, append_off = 0;
-    char *msg = calloc(size, 1);
-    if (msg == NULL) {
-        perror("calloc");
-        exit(1);
-    }
-
-    while ((ret = read(0, msg + append_off, oldsize)) == oldsize) {
-        if (msg[size - 1] == '\n')
-            break;
-        oldsize = append_off = size;
-        msg = realloc(msg, size *= 2);
-        if (msg == NULL) {
-            perror("realloc");
-            exit(1);
-        }
-    }
-    if (ret == 0) { // EOF (^D)
-        return NULL;
-    } else if (ret < 0) {
-        perror("read");
-        exit(1);
-    }
-    append_off += ret - 1;
-    msg[append_off] = '\0';
-    return msg;
-}
+struct termios oldios, rawios;
 
 void shell_prompt()
 {
@@ -58,6 +32,69 @@ void shell_prompt()
     printf("➜ ");
     putp(tigetstr("sgr0"));
 }
+
+void run_cmd(char *const *cmd)
+{
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork");
+    } else if (pid == 0) { // child
+        //reset_shell_mode();
+        //putp(tigetstr("rmcup"));
+        //tcsetattr(1, TCSANOW, &oldios);
+        if (execvp(cmd[0], cmd) < 0) {
+            if (errno == ENOENT)
+                printf("%s: no such command\n", cmd[0]);
+            else
+                perror("execvp");
+        }
+        exit(0);
+    } else {
+        pid_t r = wait(NULL);
+
+        //tcsetattr(1, TCSANOW, &rawios);
+        //putp(tigetstr("smcup"));
+        //reset_prog_mode();
+
+        if (r < 0) {
+           perror("wait");
+        }
+    }
+}
+
+void process_command(char *cmd)
+{
+    tcsetattr(1, TCSANOW, &oldios);
+
+    char **parts = my_str2vect(cmd);
+
+    // TODO fix quotes
+
+    if (parts[0]) {
+        if (strcmp(parts[0], "cd") == 0) {
+            int r = chdir(parts[1] == NULL ? getenv("HOME") : parts[1]);
+            if (r < 0) {
+                printf("cd: %s: %s\n", strerror(errno), parts[1]);
+            }
+        } else if (strcmp(parts[0], "exit") == 0) {
+            running = false;
+        } else if (strcmp(parts[0], "help") == 0) {
+            printf("Not-So-Minishell Commands:\n"
+                   "\tcd <dir> - change directory\n"
+                   "\texit - exit the shell\n"
+                   "\thelp - show this help message\n");
+        } else {
+            run_cmd(parts);
+        }
+    }
+
+    for (char **p = parts; *p != NULL; ++p)
+        free(*p);
+    free(parts);
+
+    tcsetattr(1, TCSANOW, &rawios);
+}
+
 
 #define DEBUGX 0
 #define DEBUGY tigetnum("lines")-1
@@ -79,15 +116,25 @@ void do_input()
             running = false;
         }
 
-        if (c[0] == CTRL('D')) { // ^D
+        int len = strlen(c);
+
+        if (c[0] == '\n' || c[0] == '\r' || strcmp(c, tigetstr("kent")) == 0) {
+            printf("\r\n");
+            process_command(buf);
+            break;
+        } else if (c[0] == CTRL('D') || c[0] == CTRL('C')) {
             running = false;
-        } else if (strcmp(c, tigetstr("kbs")) == 0 ||
-                   c[0] == 0x7F) { // backspace
+        } else if (c[0] == 0x7F || strcmp(c, tigetstr("kbs")) == 0) { // backspace
             if (pos > 0) {
                 putp(tigetstr("cub1")); // move left
                 putp(tigetstr("dch1")); // delete char
                 memmove(buf + pos - 1, buf + pos, strlen(buf) - pos + 1);
                 --pos;
+            }
+        } else if (strcmp(c, tigetstr("kdch1")) == 0) { // delete
+            if (pos < strlen(buf)) {
+                putp(tigetstr("dch1"));
+                memmove(buf + pos, buf + pos + 1, strlen(buf) - pos + 1);
             }
         } else if (strcmp(c, tigetstr("kcub1")) == 0) { // left
             if (pos > 0) {
@@ -109,15 +156,17 @@ void do_input()
             putp(tigetstr("clear"));
             shell_prompt();
             printf("%s", buf);
-        } else {
-            putchar(c[0]);
-            memmove(buf + pos + 1, buf + pos, strlen(buf) - pos);
-            buf[pos++] = c[0];
+        } else { // any other char
+            putp(tigetstr("smir")); // enter insert mode
+            //printf(c[0] >= ' ' ? "%c" : "0x%X", c[0]);
+            printf("%s", c);
+            putp(tigetstr("rmir")); // exit insert mode
+            memmove(buf + pos + len, buf + pos, strlen(buf) - pos);
+            strcpy(buf + pos, c);
+            pos += len;
         }
     }
 }
-
-//void sigint_handler(int sig) {}
 
 int main()
 {
@@ -135,11 +184,10 @@ int main()
     }
 
     // put terminal in raw mode
-    struct termios old;
-    tcgetattr(1, &old);
-    struct termios raw = old;
-    cfmakeraw(&raw);
-    tcsetattr(1, TCSANOW, &raw);
+    tcgetattr(1, &oldios);
+    rawios = oldios;
+    cfmakeraw(&rawios);
+    tcsetattr(1, TCSANOW, &rawios);
 
     putp(tigetstr("smkx")); // keypad mode
 
@@ -147,60 +195,13 @@ int main()
     while (running) {
         shell_prompt();
         do_input();
-
-#if 0
-        char *msg = read_str(0);
-        if (msg == NULL)
-            break;
-        char **parts = my_str2vect(msg);
-
-        if (parts[0] != NULL) { // non empty
-            if (my_strcmp(parts[0], "cd") == 0) {
-                int r = chdir(parts[1] == NULL ? getenv("HOME") : parts[1]);
-                if (r < 0) {
-                    perror("cd");
-                }
-            } else if (my_strcmp(parts[0], "exit") == 0) {
-                break;
-            } else if (my_strcmp(parts[0], "help") == 0) {
-                my_str("Minishell Commands:\n"
-                       "\tcd <dir> - change directory\n"
-                       "\texit - exit the shell\n"
-                       "\thelp - show this help message\n");
-            } else { // run command
-                pid_t child;
-                if ((child = fork()) < 0) {
-                    perror("fork");
-                    exit(1);
-                } else if (child == 0) { // child
-                    if (execvp(parts[0], parts) < 0) {
-                        if (errno == ENOENT) {
-                            my_str(parts[0]);
-                            my_str(": no such command\n");
-                        } else {
-                            perror("execvp");
-                        }
-                        exit(1);
-                    }
-                    exit(0);
-                } else {
-                    if (wait(NULL) < 0) {
-                        perror("wait");
-                    }
-                }
-            }
-        }
-
-        for (char **p = parts; *p != NULL; ++p)
-            free(*p);
-        free(parts);
-        free(msg);
-#endif
     }
 
     putp(tigetstr("rmkx")); // disable keypad mode
 
-    tcsetattr(1, TCSANOW, &old);
+    tcsetattr(1, TCSANOW, &oldios);
+
+    // reset_shell_mode();
 
     puts("Bye");
 }
