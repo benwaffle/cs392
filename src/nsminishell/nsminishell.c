@@ -1,110 +1,50 @@
+#define _DEFAULT_SOURCE // cfmakeraw()
 #include "my.h"
-#include <assert.h>
 #include <curses.h>
 #include <errno.h>
 #include <limits.h>
-#include <locale.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <sys/wait.h>
+#include <term.h>
+#include <termios.h>
+#include <unistd.h>
 #include <unistd.h>
 
-// colors
-#define KRST 1
-#define KRED 2
-#define KGRN 3
-#define KYEL 4
-#define KBLU 5
-#define KMAG 6
-#define KCYN 7
-#define KWHT 8
+bool running = 0;
 
-#define CTRL(c) ((c)-64)
-
-bool running = true;
-
-void make_colors()
+// read an arbitrary-length string from fd
+char *read_str(int fd)
 {
-    init_pair(KRST, -1, -1);
-    init_pair(KRED, COLOR_RED, -1);
-    init_pair(KGRN, COLOR_GREEN, -1);
-    init_pair(KYEL, COLOR_YELLOW, -1);
-    init_pair(KBLU, COLOR_BLUE, -1);
-    init_pair(KMAG, COLOR_MAGENTA, -1);
-    init_pair(KCYN, COLOR_CYAN, -1);
-    init_pair(KWHT, COLOR_WHITE, -1);
-}
-
-typedef void (*on_output)(const char *, void *);
-
-void run_cmd(char *const *cmd, on_output fn, void *data)
-{
-    int socks[2];
-    socketpair(AF_UNIX, SOCK_STREAM, 0, socks);
-
-    if (fork() == 0) { // child
-        close(socks[0]);
-
-        dup2(socks[1], STDIN_FILENO);
-        dup2(socks[1], STDOUT_FILENO);
-        dup2(socks[1], STDERR_FILENO);
-        if (execvp(cmd[0], cmd) < 0) {
-            if (errno == ENOENT)
-                printf("%s: no such command\n", cmd[0]);
-            else
-                perror("execvp");
-        }
-        exit(0);
-    } else { // parent
-        close(socks[1]);
-
-        char str[1024] = {0};
-        int r;
-        while ((r = read(socks[0], str, sizeof(str) - 1)) > 0) {
-            fn(str, data);
-        }
-
-        if (wait(NULL) < 0) {
-            printw("wait: %s\n", strerror(errno));
-        }
-
-        close(socks[0]);
-    }
-}
-
-void print_str(const char *str, void *data) { printw("%s", str); }
-
-void process_command(char *cmd)
-{
-    char **parts = my_str2vect(cmd);
-
-    // TODO fix quotes
-
-    if (parts[0]) {
-        if (strcmp(parts[0], "cd") == 0) {
-            int r = chdir(parts[1] == NULL ? getenv("HOME") : parts[1]);
-            if (r < 0) {
-                printw("cd: %s: %s\n", strerror(errno), parts[1]);
-            }
-        } else if (strcmp(parts[0], "exit") == 0) {
-            running = false;
-        } else if (strcmp(parts[0], "help") == 0) {
-            printw("Not-So-Minishell Commands:\n"
-                   "\tcd <dir> - change directory\n"
-                   "\texit - exit the shell\n"
-                   "\thelp - show this help message\n");
-        } else {
-            run_cmd(parts, print_str, NULL);
-        }
+    ssize_t ret, size = 4, oldsize = 4, append_off = 0;
+    char *msg = calloc(size, 1);
+    if (msg == NULL) {
+        perror("calloc");
+        exit(1);
     }
 
-    for (char **p = parts; *p != NULL; ++p)
-        free(*p);
-    free(parts);
+    while ((ret = read(0, msg + append_off, oldsize)) == oldsize) {
+        if (msg[size - 1] == '\n')
+            break;
+        oldsize = append_off = size;
+        msg = realloc(msg, size *= 2);
+        if (msg == NULL) {
+            perror("realloc");
+            exit(1);
+        }
+    }
+    if (ret == 0) { // EOF (^D)
+        return NULL;
+    } else if (ret < 0) {
+        perror("read");
+        exit(1);
+    }
+    append_off += ret - 1;
+    msg[append_off] = '\0';
+    return msg;
 }
 
 void shell_prompt()
@@ -112,92 +52,155 @@ void shell_prompt()
     char path[PATH_MAX];
     getcwd(path, sizeof path);
 
-    color_set(KGRN, NULL);
-    printw("%s ", path);
-    color_set(KBLU, NULL);
-    printw("➜ ", path);
-    color_set(KRST, NULL);
+    putp(tparm(tigetstr("setaf"), COLOR_GREEN));
+    printf("%s ", path);
+    putp(tparm(tigetstr("setaf"), COLOR_BLUE));
+    printf("➜ ");
+    putp(tigetstr("sgr0"));
 }
+
+#define DEBUGX 0
+#define DEBUGY tigetnum("lines")-1
 
 void do_input()
 {
     char buf[1024] = {0};
-    int len = 0;
     int pos = 0;
     while (running) {
-        int y, x;
-        getyx(stdscr, y, x);
+        putp(tigetstr("sc")); // save cursor
+        putp(tparm(tigetstr("cup"), DEBUGY, DEBUGX));
+        putp(tigetstr("dl1")); // delete line
+        printf("[DEBUG]: pos=%d, len=%lu, buf=%s", pos, strlen(buf), buf);
+        putp(tigetstr("rc")); // restore cursor
 
-        mvprintw(getmaxy(stdscr) - 1, 0, "[DEBUG] pos = %d, len = %d, buf = %s",
-                 pos, len, buf);
-        for (int i = 0; i < getmaxx(stdscr); ++i)
-            addch(' ');
-        move(y, x);
-
-        int c = getch();
-        if (c == ERR) {
+        char c[6] = {0};
+        if (read(0, &c, sizeof c) <= 0) {
+            perror("read");
             running = false;
-        } else if (c == '\n') { // enter
-            move(y + 1, 0);
-            process_command(buf);
-            break;
-        } else if (c == KEY_BACKSPACE || c == 0x7F) { // backspace
+        }
+
+        if (c[0] == CTRL('D')) { // ^D
+            running = false;
+        } else if (strcmp(c, tigetstr("kbs")) == 0 ||
+                   c[0] == 0x7F) { // backspace
             if (pos > 0) {
-                mvdelch(y, x - 1);
-                memmove(buf + pos - 1, buf + pos, len - pos + 1);
-                pos--;
-                len--;
+                putp(tigetstr("cub1")); // move left
+                putp(tigetstr("dch1")); // delete char
+                memmove(buf + pos - 1, buf + pos, strlen(buf) - pos + 1);
+                --pos;
             }
-        } else if (c == KEY_LEFT) { // left
+        } else if (strcmp(c, tigetstr("kcub1")) == 0) { // left
             if (pos > 0) {
-                move(y, x - 1);
-                pos--;
+                putp(tigetstr("cub1")); // move left
+                --pos;
             }
-        } else if (c == KEY_RIGHT) { // right
-            if (pos < len) {
-                move(y, x + 1);
-                pos++;
+        } else if (strcmp(c, tigetstr("kcuf1")) == 0) { // right
+            if (pos < strlen(buf)) {
+                putp(tigetstr("cuf1")); // move right
+                ++pos;
             }
-        } else if (c == CTRL('A')) { // ^A
-            move(y, x - pos);
+        } else if (c[0] == CTRL('A')) { // ^A
+            putp(tparm(tigetstr("cub"), pos));
             pos = 0;
-        } else if (c == CTRL('E')) { // ^E
-            move(y, x + (len - pos));
-            pos = len;
-        } else if (c == CTRL('L')) { // ^L
-            clear();
+        } else if (c[0] == CTRL('E')) { // ^E
+            putp(tparm(tigetstr("cuf"), strlen(buf) - pos));
+            pos = strlen(buf);
+        } else if (c[0] == CTRL('L')) { // ^L
+            putp(tigetstr("clear"));
             shell_prompt();
-            printw("%s", buf);
-            move(0, x);
-        } else if (c == CTRL('D')) { // ^D
-            running = false;
-        } else if (c > 0x1F) { // insert char, don't print control chars
-            // TODO fix text wrapping
-            insch(c);
-            move(y, x + 1);
-            memmove(buf + pos + 1, buf + pos, len - pos);
-            len++;
-            buf[pos++] = (char)c;
+            printf("%s", buf);
+        } else {
+            putchar(c[0]);
+            memmove(buf + pos + 1, buf + pos, strlen(buf) - pos);
+            buf[pos++] = c[0];
         }
     }
 }
 
+//void sigint_handler(int sig) {}
+
 int main()
 {
-    setlocale(LC_ALL, "");
-    initscr();
-    raw();
-    noecho();
-    keypad(stdscr, TRUE);
+    setvbuf(stdout, NULL, _IONBF, 0);
 
-    start_color();
-    use_default_colors();
-    make_colors();
+    int err;
+    if (setupterm(NULL, 1, &err) != OK) {
+        if (err == 1)
+            puts("setupterm: terminal is hardcopy, cannot be used");
+        else if (err == 0)
+            puts("setupterm: terminal not found or is generic type");
+        else if (err == -1)
+            puts("setupterm: cannot find terminfo database");
+        return 1;
+    }
 
+    // put terminal in raw mode
+    struct termios old;
+    tcgetattr(1, &old);
+    struct termios raw = old;
+    cfmakeraw(&raw);
+    tcsetattr(1, TCSANOW, &raw);
+
+    putp(tigetstr("smkx")); // keypad mode
+
+    running = true;
     while (running) {
         shell_prompt();
         do_input();
+
+#if 0
+        char *msg = read_str(0);
+        if (msg == NULL)
+            break;
+        char **parts = my_str2vect(msg);
+
+        if (parts[0] != NULL) { // non empty
+            if (my_strcmp(parts[0], "cd") == 0) {
+                int r = chdir(parts[1] == NULL ? getenv("HOME") : parts[1]);
+                if (r < 0) {
+                    perror("cd");
+                }
+            } else if (my_strcmp(parts[0], "exit") == 0) {
+                break;
+            } else if (my_strcmp(parts[0], "help") == 0) {
+                my_str("Minishell Commands:\n"
+                       "\tcd <dir> - change directory\n"
+                       "\texit - exit the shell\n"
+                       "\thelp - show this help message\n");
+            } else { // run command
+                pid_t child;
+                if ((child = fork()) < 0) {
+                    perror("fork");
+                    exit(1);
+                } else if (child == 0) { // child
+                    if (execvp(parts[0], parts) < 0) {
+                        if (errno == ENOENT) {
+                            my_str(parts[0]);
+                            my_str(": no such command\n");
+                        } else {
+                            perror("execvp");
+                        }
+                        exit(1);
+                    }
+                    exit(0);
+                } else {
+                    if (wait(NULL) < 0) {
+                        perror("wait");
+                    }
+                }
+            }
+        }
+
+        for (char **p = parts; *p != NULL; ++p)
+            free(*p);
+        free(parts);
+        free(msg);
+#endif
     }
 
-    endwin();
+    putp(tigetstr("rmkx")); // disable keypad mode
+
+    tcsetattr(1, TCSANOW, &old);
+
+    puts("Bye");
 }
