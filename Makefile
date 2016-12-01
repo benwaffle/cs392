@@ -82,6 +82,8 @@ PTHREAD_BIN := src/pthread/lab6
 
 NSMINISHELL_BIN := src/nsminishell/nsminishell
 
+GTK_BIN := src/gtk/gtk
+
 # tests
 
 TESTS := \
@@ -104,7 +106,8 @@ all: \
 	$(MALLOC_BIN) \
 	$(MYSELECT_BIN) \
 	$(PTHREAD_BIN) \
-	$(NSMINISHELL_BIN)
+	$(NSMINISHELL_BIN) \
+	$(GTK_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -151,6 +154,9 @@ $(PTHREAD_BIN): LDFLAGS += -pthread
 
 $(NSMINISHELL_BIN): $(LIST_LIB) $(MY_LIB)
 $(NSMINISHELL_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
+
+$(GTK_BIN): CFLAGS += $(shell pkg-config --cflags gtk+-3.0)
+$(GTK_BIN): LDLIBS += $(shell pkg-config --libs gtk+-3.0)
 
 # build archives
 %.a:
