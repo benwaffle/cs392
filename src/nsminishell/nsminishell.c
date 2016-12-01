@@ -441,10 +441,10 @@ int main()
         return 1;
     }
 
+    load_history();
+
     rawmode(true);
     putp(tigetstr("smkx")); // keypad mode
-
-    load_history();
 
     running = true;
     while (running) {
@@ -452,10 +452,10 @@ int main()
         do_input();
     }
 
-    save_history();
-
     putp(tigetstr("rmkx")); // disable keypad mode
     rawmode(false);
+
+    save_history();
 
     // reset_shell_mode();
 
