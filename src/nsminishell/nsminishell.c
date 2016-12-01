@@ -141,6 +141,15 @@ void debug(int line, const char *fmt, ...)
 #endif
 }
 
+/**
+ * insert `len' chars from src into beginning of dst
+ */
+void strinsert(char *dst, char *src, int len)
+{
+    memmove(dst + len, dst, strlen(dst) + 1); // shift chars
+    strncpy(dst, src, len); // copy from src without '\0'
+}
+
 void clr2eol(int pos)
 {
     if (pos > 0)
@@ -150,6 +159,8 @@ void clr2eol(int pos)
 
 void do_input()
 {
+    static char clipboard[BUFSIZE] = {0};
+
     // the last node is the user's input buffer
     struct s_node *hlast = new_node(calloc(BUFSIZE, 1), NULL, NULL);
     append(hlast, &history);
@@ -157,6 +168,7 @@ void do_input()
 
     int pos = 0;
     char *buf = hlast->elem;
+    bool pasted = false;
 
     while (running) {
         int hpos = 1;
@@ -237,6 +249,79 @@ void do_input()
         }
 
         /**
+         * Clipboard
+         */
+        // ^W (kill word)
+        else if (c[0] == CTRL('W')) {
+            // scan for text to copy
+            int spos = pos - 1;
+            while (spos >= 0 && buf[spos] == ' ') // go back skip spaces
+                --spos;
+            while (spos >= 0 && buf[spos] != ' ') // go back skip chars
+                --spos;
+            ++spos;
+
+            // don't copy empty text
+            if (pos - spos <= 0) {
+                continue;
+            }
+
+            // copy to clipboard
+            if (pasted) { // already pasted, clear clipboard
+                strncpy(clipboard, buf + spos, pos - spos);
+                clipboard[pos - spos] = '\0';
+            } else { // not yet pasted, append to clipboard
+                strinsert(clipboard, buf + spos, pos - spos);
+            }
+
+            pasted = false;
+
+            // remove from buffer
+            int mvlen = strlen(buf + pos);
+            memmove(buf + spos, buf + pos, mvlen);
+            buf[spos + mvlen] = '\0';
+
+            // remove from terminal
+            putp(tparm(tigetstr("cub"), pos - spos)); // left
+            putp(tparm(tigetstr("dch"), pos - spos)); // del char
+
+            pos = spos;
+        }
+        // ^U (kill to beginning)
+        else if (c[0] == CTRL('U')) {
+            if (pos == 0) {
+                continue;
+            }
+
+            // act like we've already pasted, so that ^W doesn't append
+            pasted = true;
+
+            // copy to clipboard
+            strncpy(clipboard, buf, pos);
+            clipboard[pos] = '\0';
+
+            // remove from buffer
+            int mvlen = strlen(buf + pos);
+            memmove(buf, buf + pos, mvlen);
+            buf[mvlen] = '\0';
+
+            // remove from terminal
+            putp(tparm(tigetstr("cub"), pos)); // left
+            putp(tparm(tigetstr("dch"), pos)); // del char
+
+            pos = 0;
+        }
+        // ^Y (paste)
+        else if (c[0] == CTRL('Y')) {
+            pasted = true;
+            putp(tigetstr("smir")); // enter insert mode
+            printf("%s", clipboard);
+            putp(tigetstr("rmir")); // exit insert mode
+            strinsert(buf + pos, clipboard, strlen(clipboard));
+            pos += strlen(clipboard);
+        }
+
+        /**
          * History
          */
         // up
@@ -272,8 +357,7 @@ void do_input()
             putp(tigetstr("smir")); // enter insert mode
             printf("%s", c);
             putp(tigetstr("rmir")); // exit insert mode
-            memmove(buf + pos + len, buf + pos, strlen(buf) - pos);
-            strcpy(buf + pos, c);
+            strinsert(buf + pos, c, len);
             pos += len;
         }
     }
