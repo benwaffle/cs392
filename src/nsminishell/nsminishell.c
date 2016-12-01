@@ -1,4 +1,3 @@
-#define _DEFAULT_SOURCE // cfmakeraw()
 #include "my.h"
 #include <curses.h>
 #include <errno.h>
@@ -30,7 +29,20 @@ void rawmode(bool enable) {
 
     if (enable) {
         struct termios raw = old;
-        raw.c_lflag &= ~(ICANON | IEXTEN | ECHO | ECHONL);
+
+        raw.c_lflag &= ~(ICANON | IEXTEN); // disable canonical mode
+        raw.c_lflag &= ~ISIG; // disable INT, QUIT, TSTP, ...
+        raw.c_lflag &= ~(ECHO | ECHONL); // no echo
+
+        raw.c_iflag |= ICRNL; // CR -> NL
+        raw.c_iflag &= ~INLCR; // no NL -> CR
+
+        raw.c_oflag |= OPOST; // implementation-defined output processing
+        raw.c_oflag |= ONLCR; // NL -> CR,NL
+        raw.c_oflag &= ~(OCRNL | ONOCR | ONLRET); // output CR
+
+        raw.c_cc[VMIN] = 1; // minimum number of chars for read()
+        raw.c_cc[VTIME] = 0; // read() timeout
         tcsetattr(0, TCSANOW, &raw);
     } else {
         tcsetattr(0, TCSANOW, &old);
@@ -165,9 +177,8 @@ void do_input()
             putp(tigetstr("clear"));
             shell_prompt();
             printf("%s", buf);
-        } else { // any other char
+        } else if (c[0] >= ' ') { // any other char
             putp(tigetstr("smir")); // enter insert mode
-            //printf(c[0] >= ' ' ? "%c" : "0x%X", c[0]);
             printf("%s", c);
             putp(tigetstr("rmir")); // exit insert mode
             memmove(buf + pos + len, buf + pos, strlen(buf) - pos);
