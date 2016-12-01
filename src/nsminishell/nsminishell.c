@@ -1,25 +1,30 @@
+#include "list.h"
 #include "my.h"
+#include <assert.h>
 #include <curses.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/wait.h>
 #include <term.h>
 #include <termios.h>
 #include <unistd.h>
-#include <unistd.h>
 
 #ifndef CTRL
-#define CTRL(c) (c&037)
+#define CTRL(c) (c & 037)
 #endif
 
-bool running = 0;
+#define BUFSIZE 4096
 
-void rawmode(bool enable) {
+bool running = 0;
+struct s_node *history = NULL, *hcur = NULL;
+
+void rawmode(bool enable)
+{
     static struct termios old;
     static bool init = false;
     if (!init) {
@@ -77,7 +82,7 @@ void run_cmd(char *const *cmd)
         exit(0);
     } else {
         if (wait(NULL) < 0) {
-           perror("wait");
+            perror("wait");
         }
     }
 }
@@ -115,19 +120,33 @@ void process_command(char *cmd)
     rawmode(true);
 }
 
-
-#define DEBUGX 0
-#define DEBUGY tigetnum("lines")-1
+void clr2eol(int pos)
+{
+    if (pos > 0)
+        putp(tparm(tigetstr("cub"), pos)); // move left `pos' spaces
+    putp(tigetstr("el")); // delete to eol
+}
 
 void do_input()
 {
-    char buf[4096] = {0};
+    // the last node is the user's input buffer
+    struct s_node *hlast = new_node(calloc(BUFSIZE, 1), NULL, NULL);
+    append(hlast, &history);
+    hcur = hlast;
+
     int pos = 0;
+    char *buf = hlast->elem;
+
     while (running) {
         putp(tigetstr("sc")); // save cursor
-        putp(tparm(tigetstr("cup"), DEBUGY, DEBUGX));
+        int hpos = 1;
+        for (struct s_node *cur = history; cur != NULL; ++hpos, cur = cur->next)
+            if (cur == hcur)
+                break;
+        putp(tparm(tigetstr("cup"), tigetnum("lines") - 1, 0));
         putp(tigetstr("dl1")); // delete line
-        printf("[DEBUG]: pos=%d, len=%lu, buf=%s", pos, strlen(buf), buf);
+        printf("[DEBUG]: history=%d/%d, pos=%d, buf=%s", hpos,
+               count_s_nodes(history), pos, buf);
         putp(tigetstr("rc")); // restore cursor
 
         char c[6] = {0};
@@ -138,45 +157,101 @@ void do_input()
 
         int len = strlen(c);
 
+        // newline
         if (c[0] == '\n') {
             putchar('\n');
+            if (buf[0] == '\0')
+                remove_last(&history);
             process_command(buf);
             break;
-        } else if (c[0] == CTRL('D') || c[0] == CTRL('C')) {
+        }
+        // ^D (EOF)
+        else if (c[0] == CTRL('D')) {
             running = false;
-        } else if (c[0] == 0x7F || strcmp(c, tigetstr("kbs")) == 0) { // backspace
+        }
+
+        /**
+         * Line editing
+         */
+
+        // backspace
+        else if (c[0] == 0x7F || strcmp(c, tigetstr("kbs")) == 0) {
             if (pos > 0) {
                 putp(tigetstr("cub1")); // move left
                 putp(tigetstr("dch1")); // delete char
                 memmove(buf + pos - 1, buf + pos, strlen(buf) - pos + 1);
                 --pos;
             }
-        } else if (strcmp(c, tigetstr("kdch1")) == 0) { // delete
+        }
+        // delete
+        else if (strcmp(c, tigetstr("kdch1")) == 0) {
             if (pos < strlen(buf)) {
-                putp(tigetstr("dch1"));
+                putp(tigetstr("dch1")); // delete char
                 memmove(buf + pos, buf + pos + 1, strlen(buf) - pos + 1);
             }
-        } else if (strcmp(c, tigetstr("kcub1")) == 0) { // left
+        }
+        // left
+        else if (strcmp(c, tigetstr("kcub1")) == 0) {
             if (pos > 0) {
                 putp(tigetstr("cub1")); // move left
                 --pos;
             }
-        } else if (strcmp(c, tigetstr("kcuf1")) == 0) { // right
+        }
+        // right
+        else if (strcmp(c, tigetstr("kcuf1")) == 0) {
             if (pos < strlen(buf)) {
                 putp(tigetstr("cuf1")); // move right
                 ++pos;
             }
-        } else if (c[0] == CTRL('A')) { // ^A
-            putp(tparm(tigetstr("cub"), pos));
-            pos = 0;
-        } else if (c[0] == CTRL('E')) { // ^E
-            putp(tparm(tigetstr("cuf"), strlen(buf) - pos));
+        }
+        // ^A (beginning)
+        else if (c[0] == CTRL('A')) {
+            if (pos > 0) {
+                putp(tparm(tigetstr("cub"), pos)); // backward `pos' times
+                pos = 0;
+            }
+        }
+        // ^E (end)
+        else if (c[0] == CTRL('E')) {
+            if (pos < strlen(buf)) {
+                putp(tparm(tigetstr("cuf"), strlen(buf) - pos));
+                pos = strlen(buf);
+            }
+        }
+
+        /**
+         * History
+         */
+        // up
+        else if (strcmp(c, tigetstr("kcuu1")) == 0) {
+            if (hcur->prev != NULL) {
+                hcur = hcur->prev;
+                buf = hcur->elem;
+            }
+            clr2eol(pos);
+            printf("%s", buf);
             pos = strlen(buf);
-        } else if (c[0] == CTRL('L')) { // ^L
+        }
+        // down
+        else if (strcmp(c, tigetstr("kcud1")) == 0) {
+            if (hcur->next != NULL) {
+                hcur = hcur->next;
+                buf = hcur->elem;
+            }
+            clr2eol(pos);
+            printf("%s", buf);
+            pos = strlen(buf);
+        }
+
+        // ^L
+        else if (c[0] == CTRL('L')) {
             putp(tigetstr("clear"));
             shell_prompt();
             printf("%s", buf);
-        } else if (c[0] >= ' ') { // any other char
+        }
+
+        // regular chars
+        else if (c[0] >= ' ') {
             putp(tigetstr("smir")); // enter insert mode
             printf("%s", c);
             putp(tigetstr("rmir")); // exit insert mode
@@ -185,6 +260,65 @@ void do_input()
             pos += len;
         }
     }
+}
+
+void load_history()
+{
+    char histpath[PATH_MAX] = {0};
+    sprintf(histpath, "%s/.nsmshistory", getenv("HOME"));
+
+    // crete history file if it doesn't exist
+    if (access(histpath, R_OK | W_OK) < 0) {
+        if (errno == ENOENT) { // doesn't exist
+            int fd = creat(histpath, 0600);
+            if (fd < 0) {
+                perror("creating ~/.nsmshistory");
+                exit(1);
+            }
+            close(fd);
+        } else {
+            perror("~/.nsmshistory");
+            exit(1);
+        }
+    }
+
+    // read the history file into a string
+    FILE *histfile = fopen(histpath, "r+");
+    assert(histfile != NULL);
+
+    while (true) {
+        char *line = calloc(1, BUFSIZE);
+        if (fgets(line, BUFSIZE, histfile) == NULL) {
+            free(line);
+            break;
+        }
+        line[strlen(line) - 1] = '\0'; // get rid of '\n'
+        append(new_node(line, NULL, NULL), &history);
+    }
+
+#if 0
+    printf("History:\n");
+    for (struct s_node *line = history; line != NULL; line = line->next)
+        printf("\t%s\n", (char*)line->elem);
+#endif
+
+    hcur = node_at(history, count_s_nodes(history) - 1);
+}
+
+void save_history()
+{
+    char histpath[PATH_MAX] = {0};
+    sprintf(histpath, "%s/.nsmshistory", getenv("HOME"));
+
+    FILE *histfile = fopen(histpath, "w");
+    assert(histfile != NULL);
+
+    for (struct s_node *line = history; line != NULL; line = line->next)
+        if (fprintf(histfile, "%s\n", (char *)line->elem) <= 0)
+            printf("Error writing to history file: %s\n",
+                   strerror(ferror(histfile)));
+
+    fclose(histfile);
 }
 
 int main()
@@ -207,8 +341,9 @@ int main()
     }
 
     rawmode(true);
-
     putp(tigetstr("smkx")); // keypad mode
+
+    load_history();
 
     running = true;
     while (running) {
@@ -216,11 +351,12 @@ int main()
         do_input();
     }
 
-    putp(tigetstr("rmkx")); // disable keypad mode
+    save_history();
 
+    putp(tigetstr("rmkx")); // disable keypad mode
     rawmode(false);
 
-    //reset_shell_mode();
+    // reset_shell_mode();
 
     puts("Bye");
 }

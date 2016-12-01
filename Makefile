@@ -149,7 +149,7 @@ $(MALLOC_BIN):
 $(MYSELECT_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 $(PTHREAD_BIN): LDFLAGS += -pthread
 
-$(NSMINISHELL_BIN): $(MY_LIB)
+$(NSMINISHELL_BIN): $(LIST_LIB) $(MY_LIB)
 $(NSMINISHELL_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 
 # build archives
