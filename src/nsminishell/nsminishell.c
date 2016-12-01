@@ -31,7 +31,6 @@ void rawmode(bool enable) {
         struct termios raw = old;
 
         raw.c_lflag &= ~(ICANON | IEXTEN); // disable canonical mode
-        raw.c_lflag &= ~ISIG; // disable INT, QUIT, TSTP, ...
         raw.c_lflag &= ~(ECHO | ECHONL); // no echo
 
         raw.c_iflag |= ICRNL; // CR -> NL
@@ -48,7 +47,6 @@ void rawmode(bool enable) {
         tcsetattr(0, TCSANOW, &old);
     }
 }
-
 
 void shell_prompt()
 {
@@ -69,6 +67,7 @@ void run_cmd(char *const *cmd)
     if (pid < 0) {
         perror("fork");
     } else if (pid == 0) { // child
+        signal(SIGINT, SIG_DFL);
         if (execvp(cmd[0], cmd) < 0) {
             if (errno == ENOENT)
                 printf("%s: no such command\n", cmd[0]);
@@ -190,6 +189,8 @@ void do_input()
 
 int main()
 {
+    signal(SIGINT, SIG_IGN);
+
     // disable buffering
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
