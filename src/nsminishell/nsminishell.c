@@ -1,3 +1,4 @@
+#define DEBUG
 #include "list.h"
 #include "my.h"
 #include <assert.h>
@@ -6,6 +7,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <signal.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -120,6 +122,25 @@ void process_command(char *cmd)
     rawmode(true);
 }
 
+void debug(int line, const char *fmt, ...)
+{
+#ifdef DEBUG
+    va_list args;
+    va_start(args, fmt);
+
+    putp(tigetstr("sc")); // save cursor
+    putp(tparm(tigetstr("cup"), tigetnum("lines") - line,
+               0)); // move cur to y, x
+    putp(tigetstr("dl1")); // delete line
+    putp(tigetstr("cuu1")); // up one line
+
+    vprintf(fmt, args);
+    va_end(args);
+
+    putp(tigetstr("rc")); // restore cursor
+#endif
+}
+
 void clr2eol(int pos)
 {
     if (pos > 0)
@@ -138,16 +159,12 @@ void do_input()
     char *buf = hlast->elem;
 
     while (running) {
-        putp(tigetstr("sc")); // save cursor
         int hpos = 1;
         for (struct s_node *cur = history; cur != NULL; ++hpos, cur = cur->next)
             if (cur == hcur)
                 break;
-        putp(tparm(tigetstr("cup"), tigetnum("lines") - 1, 0));
-        putp(tigetstr("dl1")); // delete line
-        printf("[DEBUG]: history=%d/%d, pos=%d, buf=%s", hpos,
-               count_s_nodes(history), pos, buf);
-        putp(tigetstr("rc")); // restore cursor
+        debug(1, "[DEBUG]: history=%d/%d, clipboard=`%s', pos=%d, buf=`%s'",
+              hpos, count_s_nodes(history), clipboard, pos, buf);
 
         char c[6] = {0};
         if (read(0, &c, sizeof c) <= 0) {
@@ -296,10 +313,10 @@ void load_history()
         append(new_node(line, NULL, NULL), &history);
     }
 
-#if 0
+#ifdef DEBUG
     printf("History:\n");
     for (struct s_node *line = history; line != NULL; line = line->next)
-        printf("\t%s\n", (char*)line->elem);
+        printf("\t%s\n", (char *)line->elem);
 #endif
 
     hcur = node_at(history, count_s_nodes(history) - 1);
