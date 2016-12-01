@@ -19,7 +19,24 @@
 #endif
 
 bool running = 0;
-struct termios oldios, rawios;
+
+void rawmode(bool enable) {
+    static struct termios old;
+    static bool init = false;
+    if (!init) {
+        init = true;
+        tcgetattr(0, &old);
+    }
+
+    if (enable) {
+        struct termios raw = old;
+        raw.c_lflag &= ~(ICANON | IEXTEN | ECHO | ECHONL);
+        tcsetattr(0, TCSANOW, &raw);
+    } else {
+        tcsetattr(0, TCSANOW, &old);
+    }
+}
+
 
 void shell_prompt()
 {
@@ -35,13 +52,11 @@ void shell_prompt()
 
 void run_cmd(char *const *cmd)
 {
+    // TODO: do we need reset_shell_mode
     pid_t pid = fork();
     if (pid < 0) {
         perror("fork");
     } else if (pid == 0) { // child
-        //reset_shell_mode();
-        //putp(tigetstr("rmcup"));
-        //tcsetattr(1, TCSANOW, &oldios);
         if (execvp(cmd[0], cmd) < 0) {
             if (errno == ENOENT)
                 printf("%s: no such command\n", cmd[0]);
@@ -50,13 +65,7 @@ void run_cmd(char *const *cmd)
         }
         exit(0);
     } else {
-        pid_t r = wait(NULL);
-
-        //tcsetattr(1, TCSANOW, &rawios);
-        //putp(tigetstr("smcup"));
-        //reset_prog_mode();
-
-        if (r < 0) {
+        if (wait(NULL) < 0) {
            perror("wait");
         }
     }
@@ -64,7 +73,7 @@ void run_cmd(char *const *cmd)
 
 void process_command(char *cmd)
 {
-    tcsetattr(1, TCSANOW, &oldios);
+    rawmode(false);
 
     char **parts = my_str2vect(cmd);
 
@@ -92,7 +101,7 @@ void process_command(char *cmd)
         free(*p);
     free(parts);
 
-    tcsetattr(1, TCSANOW, &rawios);
+    rawmode(true);
 }
 
 
@@ -101,7 +110,7 @@ void process_command(char *cmd)
 
 void do_input()
 {
-    char buf[1024] = {0};
+    char buf[4096] = {0};
     int pos = 0;
     while (running) {
         putp(tigetstr("sc")); // save cursor
@@ -118,8 +127,8 @@ void do_input()
 
         int len = strlen(c);
 
-        if (c[0] == '\n' || c[0] == '\r' || strcmp(c, tigetstr("kent")) == 0) {
-            printf("\r\n");
+        if (c[0] == '\n') {
+            putchar('\n');
             process_command(buf);
             break;
         } else if (c[0] == CTRL('D') || c[0] == CTRL('C')) {
@@ -170,7 +179,9 @@ void do_input()
 
 int main()
 {
+    // disable buffering
     setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
 
     int err;
     if (setupterm(NULL, 1, &err) != OK) {
@@ -183,11 +194,7 @@ int main()
         return 1;
     }
 
-    // put terminal in raw mode
-    tcgetattr(1, &oldios);
-    rawios = oldios;
-    cfmakeraw(&rawios);
-    tcsetattr(1, TCSANOW, &rawios);
+    rawmode(true);
 
     putp(tigetstr("smkx")); // keypad mode
 
@@ -199,9 +206,9 @@ int main()
 
     putp(tigetstr("rmkx")); // disable keypad mode
 
-    tcsetattr(1, TCSANOW, &oldios);
+    rawmode(false);
 
-    // reset_shell_mode();
+    //reset_shell_mode();
 
     puts("Bye");
 }
