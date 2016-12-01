@@ -52,7 +52,6 @@ void sigint_handler(int sig) {}
 
 int main()
 {
-    signal(SIGINT, sigint_handler);
     sigset_t blocked;
     sigemptyset(&blocked);
     // we use sigaction for SA_RESTART
