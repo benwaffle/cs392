@@ -332,5 +332,8 @@ int main()
         my_strcmp(my_vect2str(my_str2vect("hello \t\t\n class,\nhow are you?")),
                   "hello class, how are you?") == 0));
 
+    PRINT(
+        assert(my_strcmp(my_str2vect("sh -c 'rm -rf *'")[2], "rm -rf *") == 0));
+
     my_str("\n--------- done ---------\n");
 }
