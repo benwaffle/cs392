@@ -139,8 +139,9 @@ void debug(int line, const char *fmt, ...)
     va_start(args, fmt);
 
     putp(tigetstr("sc")); // save cursor
-    putp(tparm(tigetstr("cup"), tigetnum("lines") - line,
-               0)); // move cur to y, x
+    // clang-format off
+    putp(tparm(tigetstr("cup"), tigetnum("lines") - line, 0)); // move cur to y, x
+    // clang-format on
     putp(tigetstr("dl1")); // delete line
 
     vprintf(fmt, args);
