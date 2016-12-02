@@ -75,8 +75,6 @@ void process_command(char *cmd)
 
     char **parts = my_str2vect(cmd);
 
-    // TODO fix quotes
-
     if (parts[0]) {
         if (strcmp(parts[0], "cd") == 0) {
             int r = chdir(parts[1] == NULL ? getenv("HOME") : parts[1]);
