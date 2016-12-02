@@ -320,6 +320,9 @@ int main()
 
     my_char('\n');
 
+    PRINT(assert(my_strcmp(my_vect2str((char *[]){"hello", "world", NULL}),
+                           "hello world") == 0));
+
     PRINT(assert(my_strcmp(my_vect2str(my_str2vect("")), "") == 0));
     PRINT(assert(my_strcmp(my_vect2str(my_str2vect("hello")), "hello") == 0));
     PRINT(assert(my_strcmp(my_vect2str(my_str2vect("a b")), "a b") == 0));

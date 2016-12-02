@@ -1,18 +1,22 @@
 #include "my.h"
+#include <stdio.h>
 
 char *my_vect2str(char **x)
 {
-    int len = my_strlen(*x);
-    for (char **y = x + 1; *y != NULL; y++) {
+    if (*x == NULL)
+        return my_strdup("");
+
+    int len = 1;
+    for (char **y = x; *y != NULL; y++) {
         len += 1 + my_strlen(*y);
     }
-    len++; // null terminator
+    len--; // last space
 
-    char *s = malloc(len);
-    my_strcpy(s, *x);
-    for (char **y = x + 1; *y != NULL; ++y) {
-        my_strcat(s, " ");
+    char *s = calloc(len, 1);
+    for (char **y = x; *y != NULL; ++y) {
         my_strcat(s, *y);
+        s[my_strlen(s)] = ' ';
     }
+    s[len - 1] = '\0';
     return s;
 }
