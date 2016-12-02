@@ -24,6 +24,7 @@
 
 bool running = 0;
 struct s_node *history = NULL, *hcur = NULL;
+int retcode = 0;
 
 void rawmode(bool enable)
 {
@@ -63,7 +64,10 @@ void shell_prompt()
 
     putp(tparm(tigetstr("setaf"), COLOR_GREEN));
     printf("%s ", path);
-    putp(tparm(tigetstr("setaf"), COLOR_BLUE));
+    if (retcode == 0)
+        putp(tparm(tigetstr("setaf"), COLOR_BLUE));
+    else
+        putp(tparm(tigetstr("setaf"), COLOR_RED));
     printf("➜ ");
     putp(tigetstr("sgr0"));
 }
@@ -84,8 +88,13 @@ void run_cmd(char *const *cmd)
         }
         exit(0);
     } else {
-        if (wait(NULL) < 0) {
+        int status;
+        if (wait(&status) < 0) {
             perror("wait");
+        } else if (WIFEXITED(status)) {
+            retcode = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            retcode = 0200 | WTERMSIG(status);
         }
     }
 }
