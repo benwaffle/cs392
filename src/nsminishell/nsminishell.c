@@ -197,6 +197,7 @@ void do_input()
         // ^D (EOF)
         else if (c[0] == CTRL('D')) {
             running = false;
+            remove_last(&history);
         }
 
         /**
