@@ -39,6 +39,7 @@ void rawmode(bool enable)
 
         raw.c_lflag &= ~(ICANON | IEXTEN); // disable canonical mode
         raw.c_lflag &= ~(ECHO | ECHONL); // no echo
+        raw.c_lflag &= ~ISIG; // disable signals (INT, QUIT, TSTP, ...)
 
         raw.c_iflag |= ICRNL; // CR -> NL
         raw.c_iflag &= ~INLCR; // no NL -> CR
@@ -245,6 +246,12 @@ void do_input()
                 putp(tparm(tigetstr("cuf"), strlen(buf) - pos));
                 pos = strlen(buf);
             }
+        }
+        // ^C
+        else if (c[0] == CTRL('C')) {
+            putchar('\n');
+            remove_last(&history);
+            break;
         }
 
         /**
