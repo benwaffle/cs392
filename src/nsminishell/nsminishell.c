@@ -251,6 +251,7 @@ void do_input()
         /**
          * Clipboard
          */
+
         // ^W (kill word)
         else if (c[0] == CTRL('W')) {
             // scan for text to copy
@@ -324,6 +325,7 @@ void do_input()
         /**
          * History
          */
+
         // up
         else if (strcmp(c, tigetstr("kcuu1")) == 0) {
             if (hcur->prev != NULL) {
