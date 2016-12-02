@@ -1,5 +1,4 @@
 #include "my.h"
-#include <stdio.h>
 
 // is whitespace
 static int isws(char c)
@@ -54,14 +53,11 @@ char **my_str2vect(char *str)
             // str[i] is not whitespace, so start a new token
             if (tokenstart == -1) {
                 tokenstart = i;
-                printf("token: %d..", i);
             }
 
             // if next is whitespace, save this token
             // don't make tokens until we exit quotes
             if (!insq && !indq && isws(str[i + 1])) {
-                printf("%d\n", i + 1);
-
                 // if we start with a quote, skip it
                 if (str[tokenstart] == '\'' || str[tokenstart] == '\"')
                     tokenstart++;
