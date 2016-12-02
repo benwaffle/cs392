@@ -218,13 +218,13 @@ int main()
     PRINT({
         char x[] = "hello";
         assert(my_strncpy(x, "bye", 3) == x);
-        assert(my_strcmp(x, "byelo") == 0);
+        assert(my_strcmp(x, "bye") == 0);
     });
 
     PRINT({
         char x[] = "hello";
         assert(my_strncpy(x, "bye", 2) == x);
-        assert(my_strcmp(x, "byllo") == 0);
+        assert(my_strcmp(x, "by") == 0);
     });
 
     my_char('\n');
