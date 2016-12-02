@@ -152,7 +152,12 @@ $(MALLOC_BIN):
 $(MYSELECT_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 $(PTHREAD_BIN): LDFLAGS += -pthread
 
-$(NSMINISHELL_BIN): src/nsminishell/nsminishell.c src/nsminishell/term.c $(LIST_LIB) $(MY_LIB)
+$(NSMINISHELL_BIN): \
+	src/nsminishell/nsminishell.c \
+	src/nsminishell/history.c \
+	src/nsminishell/term.c \
+	$(LIST_LIB) $(MY_LIB)
+$(NSMINISHELL_BIN): CFLAGS += -DDEBUG
 $(NSMINISHELL_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 
 $(GTK_BIN): CFLAGS += $(shell pkg-config --cflags gtk+-3.0)
