@@ -132,7 +132,6 @@ void debug(int line, const char *fmt, ...)
     putp(tparm(tigetstr("cup"), tigetnum("lines") - line,
                0)); // move cur to y, x
     putp(tigetstr("dl1")); // delete line
-    putp(tigetstr("cuu1")); // up one line
 
     vprintf(fmt, args);
     va_end(args);
@@ -175,7 +174,7 @@ void do_input()
         for (struct s_node *cur = history; cur != NULL; ++hpos, cur = cur->next)
             if (cur == hcur)
                 break;
-        debug(1, "[DEBUG]: history=%d/%d, clipboard=`%s', pos=%d, buf=`%s'",
+        debug(0, "[DEBUG]: history=%d/%d, clipboard=`%s', pos=%d, buf=`%s'",
               hpos, count_s_nodes(history), clipboard, pos, buf);
 
         char c[6] = {0};
