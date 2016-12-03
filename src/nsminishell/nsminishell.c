@@ -59,6 +59,11 @@ char *read_str(int fd)
 
 void shell_prompt()
 {
+    // enable keypad mode
+    // we set this each time we show the prompt in case programs like htop turn
+    // off keypad mode
+    putp(tigetstr("smkx"));
+
     char path[PATH_MAX];
     getcwd(path, sizeof path);
 
@@ -475,7 +480,6 @@ int main()
     load_history();
 
     rawmode(true);
-    putp(tigetstr("smkx")); // keypad mode
 
     running = true;
     while (running) {
