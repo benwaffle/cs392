@@ -232,15 +232,16 @@ void do_input()
 
     int pos = 0;
     char *buf = hlast->elem;
-    bool pasted = false;
+    bool copying = false; // last command was copy
 
     while (running) {
         int hpos = 1;
         for (struct s_node *cur = history; cur != NULL; ++hpos, cur = cur->next)
             if (cur == hcur)
                 break;
-        debug(0, "[DEBUG]: history=%d/%d, clipboard=`%s', pos=%d, buf=`%s'",
-              hpos, count_s_nodes(history), clipboard, pos, buf);
+        debug(0, "[DEBUG]: history=%d/%d, copying=%d, clipboard=`%s', pos=%d, "
+                 "buf=`%s'",
+              hpos, count_s_nodes(history), copying, clipboard, pos, buf);
 
         char c[6] = {0};
         if (read(0, &c, sizeof c) <= 0) {
@@ -341,58 +342,49 @@ void do_input()
             ++spos;
 
             // don't copy empty text
-            if (pos - spos <= 0) {
-                continue;
+            if (pos - spos > 0) {
+                // copy to clipboard
+                if (!copying) { // did something else (not copying), clear
+                                // clipboard
+                    strncpy(clipboard, buf + spos, pos - spos);
+                    clipboard[pos - spos] = '\0';
+                } else { // still copying, append to clipboard
+                    strinsert(clipboard, buf + spos, pos - spos);
+                }
+
+                // remove from buffer
+                int mvlen = strlen(buf + pos);
+                memmove(buf + spos, buf + pos, mvlen);
+                buf[spos + mvlen] = '\0';
+
+                // remove from terminal
+                putp(tparm(tigetstr("cub"), pos - spos)); // left
+                putp(tparm(tigetstr("dch"), pos - spos)); // del char
+
+                pos = spos;
             }
-
-            // copy to clipboard
-            if (pasted) { // already pasted, clear clipboard
-                strncpy(clipboard, buf + spos, pos - spos);
-                clipboard[pos - spos] = '\0';
-            } else { // not yet pasted, append to clipboard
-                strinsert(clipboard, buf + spos, pos - spos);
-            }
-
-            pasted = false;
-
-            // remove from buffer
-            int mvlen = strlen(buf + pos);
-            memmove(buf + spos, buf + pos, mvlen);
-            buf[spos + mvlen] = '\0';
-
-            // remove from terminal
-            putp(tparm(tigetstr("cub"), pos - spos)); // left
-            putp(tparm(tigetstr("dch"), pos - spos)); // del char
-
-            pos = spos;
         }
         // ^U (kill to beginning)
         else if (c[0] == CTRL('U')) {
-            if (pos == 0) {
-                continue;
+            if (pos > 0) {
+                // copy to clipboard
+                strncpy(clipboard, buf, pos);
+                clipboard[pos] = '\0';
+
+                // remove from buffer
+                int mvlen = strlen(buf + pos);
+                memmove(buf, buf + pos, mvlen);
+                buf[mvlen] = '\0';
+
+                // remove from terminal
+                putp(tparm(tigetstr("cub"), pos)); // left
+                putp(tparm(tigetstr("dch"), pos)); // del char
+
+                pos = 0;
             }
-
-            // act like we've already pasted, so that ^W doesn't append
-            pasted = true;
-
-            // copy to clipboard
-            strncpy(clipboard, buf, pos);
-            clipboard[pos] = '\0';
-
-            // remove from buffer
-            int mvlen = strlen(buf + pos);
-            memmove(buf, buf + pos, mvlen);
-            buf[mvlen] = '\0';
-
-            // remove from terminal
-            putp(tparm(tigetstr("cub"), pos)); // left
-            putp(tparm(tigetstr("dch"), pos)); // del char
-
-            pos = 0;
         }
         // ^Y (paste)
         else if (c[0] == CTRL('Y')) {
-            pasted = true;
             putp(tigetstr("smir")); // enter insert mode
             printf("%s", clipboard);
             putp(tigetstr("rmir")); // exit insert mode
@@ -439,6 +431,12 @@ void do_input()
             putp(tigetstr("rmir")); // exit insert mode
             strinsert(buf + pos, c, len);
             pos += len;
+        }
+
+        if (c[0] == CTRL('W') || c[0] == CTRL('U')) {
+            copying = true;
+        } else {
+            copying = false;
         }
     }
 }
