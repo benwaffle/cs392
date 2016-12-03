@@ -124,6 +124,9 @@ fclean: clean
 	$(RM) $(MINISHELL_BIN)
 	$(RM) $(MALLOC_BIN)
 	$(RM) $(MYSELECT_BIN)
+	$(RM) $(PTHREAD_BIN)
+	$(RM) $(NSMINISHELL_BIN)
+	$(RM) $(GTK_BIN)
 
 re: fclean all
 
