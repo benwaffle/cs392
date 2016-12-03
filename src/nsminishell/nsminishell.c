@@ -52,7 +52,7 @@ void run_cmd(char *const *cmd)
         signal(SIGINT, SIG_DFL);
         if (execvp(cmd[0], cmd) < 0) {
             if (errno == ENOENT)
-                printf("%s: no such command\n", cmd[0]);
+                fprintf(stderr, "%s: no such command\n", cmd[0]);
             else
                 perror("execvp");
         }
