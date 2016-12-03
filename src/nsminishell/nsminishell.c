@@ -1,5 +1,6 @@
 #include "list.h"
 #include "my.h"
+#include <assert.h>
 #include <curses.h>
 #include <errno.h>
 #include <limits.h>
@@ -26,6 +27,35 @@ void clr2eol(int pos);
 
 void load_history();
 void save_history();
+
+// read an arbitrary-length string from fd
+char *read_str(int fd)
+{
+    ssize_t ret, size = 4, oldsize = 4, append_off = 0;
+    char *msg = calloc(size, 1);
+    if (msg == NULL) {
+        perror("calloc");
+        exit(1);
+    }
+
+    while ((ret = read(fd, msg + append_off, oldsize)) == oldsize) {
+        if (msg[size - 1] == '\n')
+            break;
+        oldsize = append_off = size;
+        msg = realloc(msg, size *= 2);
+        if (msg == NULL) {
+            perror("realloc");
+            exit(1);
+        }
+    }
+    if (ret < 0) {
+        perror("read");
+        exit(1);
+    }
+    append_off += ret - 1;
+    msg[append_off] = '\0';
+    return msg;
+}
 
 void shell_prompt()
 {
@@ -69,13 +99,87 @@ void run_cmd(char *const *cmd)
     }
 }
 
-void process_command(char *cmd)
+char *run_subshell(char **cmd)
 {
+    int pipefd[2]; // 0 - read, 1 - write
+    pipe(pipefd);
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        return NULL;
+    } else if (pid == 0) { // child
+        close(pipefd[0]);
+        dup2(pipefd[1], 1);
+        signal(SIGINT, SIG_DFL);
+        if (execvp(cmd[0], cmd) < 0) {
+            if (errno == ENOENT)
+                fprintf(stderr, "%s: no such command\n", cmd[0]);
+            else
+                perror("execvp");
+        }
+        exit(0);
+    } else { // parent
+        close(pipefd[1]);
+        char *output = read_str(pipefd[0]);
+        wait(NULL);
+        close(pipefd[0]);
+        return output;
+    }
+}
+
+char *process_command(char *_cmd, bool subshell)
+{
+    char *output = NULL;
+    char *cmd = strdup(_cmd);
+    for (int i = 0; cmd[i] != '\0'; ++i) {
+        if (cmd[i] == '$' && cmd[i + 1] == '(') { // subshell
+            int paren = 1;
+            int j = i + 2;
+            while (paren != 0 && cmd[j] != '\0') {
+                if (cmd[j] == '(')
+                    ++paren;
+                else if (cmd[j] == ')')
+                    --paren;
+                ++j;
+            }
+            if (paren != 0) { // unbalanced parens
+                printf("Error: unbalanced parentheses\n");
+                return NULL;
+            } else {
+                int begin = i + 2, end = j - 1;
+                char *subcmd = calloc(end - begin + 1, 1);
+                strncpy(subcmd, cmd + begin, end - begin);
+
+                char *output = process_command(subcmd, true);
+                assert(output != NULL);
+
+                free(subcmd);
+
+                // new command = <left> '<subshell output>' <right>
+                int len =
+                    i + 1 + strlen(output) + 1 + strlen(cmd + end + 1) + 1;
+                char *newcmd = calloc(len, 1);
+                strncat(newcmd, cmd, i);
+                strncat(newcmd, "'", 1);
+                strcat(newcmd, output);
+                strncat(newcmd, "'", 1);
+                strcat(newcmd, cmd + end + 1);
+
+                free(output);
+                free(cmd);
+                cmd = newcmd;
+            }
+        }
+    }
+
     rawmode(false);
 
     char **parts = my_str2vect(cmd);
 
-    if (parts[0]) {
+    if (subshell) {
+        output = run_subshell(parts);
+    } else if (parts[0]) {
         if (strcmp(parts[0], "cd") == 0) {
             int r = chdir(parts[1] == NULL ? getenv("HOME") : parts[1]);
             if (r < 0) {
@@ -98,6 +202,9 @@ void process_command(char *cmd)
     free(parts);
 
     rawmode(true);
+
+    free(cmd);
+    return output;
 }
 
 /**
@@ -150,7 +257,7 @@ void do_input()
             } else if (buf[0] == '\0') {
                 remove_last(&history);
             }
-            process_command(buf);
+            process_command(buf, false);
             break;
         }
         // ^D (EOF)
@@ -331,9 +438,24 @@ void do_input()
     }
 }
 
+void ignore(int sig) {}
+
 int main()
 {
     signal(SIGINT, SIG_IGN);
+
+    sigset_t mask;
+    sigemptyset(&mask);
+    // restart the subshell read() on SIGCHLD
+    // clang-format off
+    sigaction(SIGCHLD,
+              &(struct sigaction){
+                  .sa_handler = ignore,
+                  .sa_mask = mask,
+                  .sa_flags = SA_RESTART
+              },
+              NULL);
+    // clang-format on
 
     // disable buffering
     setvbuf(stdout, NULL, _IONBF, 0);
