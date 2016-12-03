@@ -32,10 +32,10 @@ void shell_prompt()
     char path[PATH_MAX];
     getcwd(path, sizeof path);
 
-    putp(tparm(tigetstr("setaf"), COLOR_GREEN));
+    putp(tparm(tigetstr("setaf"), COLOR_BLUE));
     printf("%s ", path);
     if (retcode == 0)
-        putp(tparm(tigetstr("setaf"), COLOR_BLUE));
+        putp(tparm(tigetstr("setaf"), COLOR_GREEN));
     else
         putp(tparm(tigetstr("setaf"), COLOR_RED));
     printf("➜ ");
