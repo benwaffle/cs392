@@ -27,7 +27,7 @@ char *read_str(int fd)
         exit(1);
     }
 
-    while ((ret = read(0, msg + append_off, oldsize)) == oldsize) {
+    while ((ret = read(fd, msg + append_off, oldsize)) == oldsize) {
         if (msg[size - 1] == '\n')
             break;
         oldsize = append_off = size;
