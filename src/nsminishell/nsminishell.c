@@ -141,10 +141,12 @@ void do_input()
         // newline
         if (c[0] == '\n') {
             putchar('\n');
-            if (buf != hlast->elem) { // if user is executing a command in history
+            // if user is executing a command in history
+            if (buf != hlast->elem) {
                 free(hlast->elem);
                 remove_last(&history);
-                append(new_node(strdup(buf), NULL, NULL), &history); // duplicate the cmd from histroy
+                // duplicate the cmd from histroy
+                append(new_node(strdup(buf), NULL, NULL), &history);
             } else if (buf[0] == '\0') {
                 remove_last(&history);
             }
