@@ -47,7 +47,7 @@ void load_history()
         append(new_node(line, NULL, NULL), &history);
     }
 
-#ifdef DEBUG
+#if 0
     printf("History:\n");
     for (struct s_node *line = history; line != NULL; line = line->next)
         printf("\t%s\n", (char *)line->elem);
