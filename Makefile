@@ -160,7 +160,6 @@ $(NSMINISHELL_BIN): \
 	src/nsminishell/history.c \
 	src/nsminishell/term.c \
 	$(LIST_LIB) $(MY_LIB)
-$(NSMINISHELL_BIN): CFLAGS += -DDEBUG
 $(NSMINISHELL_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 
 $(GTK_BIN): CFLAGS += $(shell pkg-config --cflags gtk+-3.0)
