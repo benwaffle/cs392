@@ -147,11 +147,8 @@ $(MY_LIB): $(MY_OBJ)
 $(LIST_LIB): $(LIST_OBJ)
 
 $(PIPES_BIN): $(MY_LIB)
-$(SIGNALS_BIN):
-$(SOCKET_BIN):
 $(SOCKETTALK_BIN): $(MY_LIB) $(LIST_LIB)
 $(MINISHELL_BIN): $(MY_LIB)
-$(MALLOC_BIN):
 $(MYSELECT_BIN): LDLIBS += $(shell pkg-config --libs ncurses)
 $(PTHREAD_BIN): LDFLAGS += -pthread
 
