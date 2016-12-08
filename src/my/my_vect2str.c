@@ -3,6 +3,9 @@
 
 char *my_vect2str(char **x)
 {
+    if (x == NULL)
+        return NULL;
+
     if (*x == NULL)
         return my_strdup("");
 

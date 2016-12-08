@@ -17,6 +17,11 @@ static int isws(char c)
  */
 char **my_str2vect(char *str)
 {
+    if (str == NULL) {
+        return NULL;
+    }
+
+
     int len = 0;
     int insq = 0, indq = 0; // in {single,double} quote
     for (int i = 0; str[i] != '\0'; ++i) {
