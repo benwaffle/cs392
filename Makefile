@@ -84,6 +84,8 @@ NSMINISHELL_BIN := src/nsminishell/nsminishell
 
 GTK_BIN := src/gtk/gtk
 
+HTTP_BIN := src/http/http
+
 # tests
 
 TESTS := \
@@ -107,7 +109,8 @@ all: \
 	$(MYSELECT_BIN) \
 	$(PTHREAD_BIN) \
 	$(NSMINISHELL_BIN) \
-	$(GTK_BIN)
+	$(GTK_BIN) \
+	$(HTTP_BIN)
 
 clean:
 	$(RM) $(MY_OBJ)
@@ -127,6 +130,7 @@ fclean: clean
 	$(RM) $(PTHREAD_BIN)
 	$(RM) $(NSMINISHELL_BIN)
 	$(RM) $(GTK_BIN)
+	$(RM) $(HTTP_BIN)
 
 re: fclean all
 
